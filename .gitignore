@@ -1,3 +1,4 @@
-teamserver
-agent
+/teamserver
+/agent
 *.exe
+
