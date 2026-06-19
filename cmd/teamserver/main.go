@@ -2,23 +2,28 @@ package main
 
 import (
 	"bufio"
+	"context"
 	"fmt"
 	"log"
 	"net"
 	"os"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/RodKast/go-c2/pkg/agent"
+	"github.com/RodKast/go-c2/pkg/listener"
 	"github.com/RodKast/go-c2/pkg/task"
 	"github.com/chzyer/readline"
 	"github.com/fatih/color"
 )
 
 var (
-	agents  = make(map[string]*agent.Agent)
-	agentMu sync.Mutex
+	agents     = make(map[string]*agent.Agent)
+	agentMu    sync.Mutex
+	listeners  = make(map[string]*listener.Listener)
+	listenerMu sync.Mutex
 )
 
 func printBanner() {
@@ -31,7 +36,8 @@ func printBanner() {
 	red.Println(` | . | | | | | | |  _ < / _ \/ _` + "`" + `|/ __/ _  \| '_ \`)
 	red.Println(` | |\  | |_| | | | |_) |  __/ (_| | (_| (_) | | | |`)
 	red.Println(` |_| \_|\__,_|_|_|____/ \___|\__,_|\___\___/|_| |_|`)
-	cyan.Println("\n  NullBeacon C2 | For authorized use only\n")
+	cyan.Println()
+	cyan.Println("  NullBeacon C2 | For authorized use only")
 }
 
 func main() {
@@ -41,26 +47,7 @@ func main() {
 		log.Fatalf("failed to open log file: %v", err)
 	}
 	log.SetOutput(logFile)
-	go startListener()
 	operatorShell()
-}
-
-func startListener() {
-
-	listener, err := net.Listen("tcp", ":8080")
-	if err != nil {
-		log.Fatalf("failed to start listener: %v", err)
-	}
-	defer listener.Close()
-
-	for {
-		conn, err := listener.Accept()
-		if err != nil {
-			log.Printf("failed to accept connection: %v", err)
-			continue
-		}
-		go handleConnection(conn)
-	}
 }
 
 func handleConnection(conn net.Conn) {
@@ -139,6 +126,12 @@ func operatorShell() {
 		command = strings.TrimSpace(command)
 
 		switch {
+		case command == "listeners":
+			listListeners()
+		case strings.HasPrefix(command, "listen"):
+			startNewListener(command)
+		case strings.HasPrefix(command, "stop"):
+			stopListener(command)
 		case command == "list":
 			listAgents()
 		case strings.HasPrefix(command, "interact"):
@@ -210,4 +203,87 @@ func interactWithAgent(agentID string) {
 			fmt.Printf("output: %s\n", t.Output)
 		}
 	}
+}
+
+func listListeners() {
+	listenerMu.Lock()
+	defer listenerMu.Unlock()
+
+	if len(listeners) == 0 {
+		fmt.Println("No listeners running.")
+		return
+	}
+
+	fmt.Println("Active listeners:")
+	for id, l := range listeners {
+		fmt.Printf("ID: %s, Protocol: %s, Host: %s, Port: %d, Status: %s\n", id, l.Protocol, l.Host, l.Port, l.Status)
+	}
+}
+
+func startNewListener(command string) {
+	parts := strings.Fields(command)
+	if len(parts) < 6 {
+		fmt.Println("Usage: listen tcp --lhost 0.0.0.0 --lport 8080")
+		return
+	}
+
+	protocol := parts[1]
+	var host string
+	var port int
+
+	for i, p := range parts {
+		if p == "--lhost" {
+			host = parts[i+1]
+		}
+		if p == "--lport" {
+			port, _ = strconv.Atoi(parts[i+1])
+		}
+	}
+
+	l := listener.NewListener(protocol, host, port)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	l.Cancel = cancel
+
+	listenerMu.Lock()
+	listeners[l.ID] = l
+	listenerMu.Unlock()
+
+	go func() {
+		err := l.Start(ctx, handleConnection)
+		if err != nil {
+			log.Printf("listener %s stopped with error: %v", l.ID, err)
+		} else {
+			log.Printf("listener %s stopped", l.ID)
+		}
+	}()
+
+	l.Status = "running"
+	log.Printf("started listener %s on %s:%d", l.ID, l.Host, l.Port)
+	fmt.Printf("started listener %s on %s:%d\n", l.ID, l.Host, l.Port)
+
+}
+
+func stopListener(command string) {
+	parts := strings.Fields(command)
+	if len(parts) != 2 {
+		fmt.Println("Usage: stop <listener_id>")
+		return
+	}
+
+	listenerID := parts[1]
+
+	listenerMu.Lock()
+	l, exists := listeners[listenerID]
+	if !exists {
+		listenerMu.Unlock()
+		fmt.Printf("listener %s not found\n", listenerID)
+		return
+	}
+	l.Cancel()
+	delete(listeners, listenerID)
+	listenerMu.Unlock()
+
+	log.Printf("stopped listener %s", listenerID)
+	fmt.Printf("stopped listener %s\n", listenerID)
 }
