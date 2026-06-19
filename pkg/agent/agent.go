@@ -3,6 +3,7 @@ package agent
 import (
 	"fmt"
 
+	"github.com/RodKast/go-c2/pkg/task"
 	"github.com/google/uuid"
 )
 
@@ -11,6 +12,7 @@ type Agent struct {
 	Username string
 	Hostname string
 	Address  string
+	Tasks    []*task.Task
 }
 
 func (a *Agent) String() string {

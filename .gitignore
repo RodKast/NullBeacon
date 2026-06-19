@@ -1,4 +1,4 @@
 /teamserver
 /agent
 *.exe
-
+teamserver.log

@@ -9,16 +9,19 @@ A Command & Control (C2) framework built from scratch in Go, developed as a lear
 ## 🏗️ Architecture
 
 ```
-Operator
-   │
-   ▼
+Operator CLI
+     │
+     ▼
 Teamserver  ◄──── TCP :8080 ────  Agent(s)
+     │
+     └── teamserver.log
 ```
 
 | Component | Description |
 |---|---|
 | `teamserver` | Listens for agent connections, registers agents, queues tasks |
 | `agent` | Beacons to the teamserver every 10 seconds with system info |
+| `operator shell` | Interactive CLI for listing agents and queuing tasks |
 
 ---
 
@@ -27,14 +30,15 @@ Teamserver  ◄──── TCP :8080 ────  Agent(s)
 ```
 go-c2/
 ├── cmd/
-│   ├── teamserver/     # Teamserver binary
+│   ├── teamserver/     # Teamserver binary + operator shell
 │   └── agent/          # Agent binary
 ├── pkg/
 │   ├── agent/          # Agent struct and registration logic
-│   ├── transport/      # (upcoming) Transport layer
-│   └── task/           # (upcoming) Task queue
+│   ├── task/           # Task struct and queue logic
+│   └── transport/      # (upcoming) Transport layer
 ├── go.mod
-└── go.sum
+├── go.sum
+└── teamserver.log      # Runtime log (gitignored)
 ```
 
 ---
@@ -58,6 +62,11 @@ go mod tidy
 go run ./cmd/teamserver
 ```
 
+Logs are written to `teamserver.log`. Monitor them in a separate terminal:
+```bash
+tail -f teamserver.log
+```
+
 **Start the agent** (defaults to `localhost:8080`):
 ```bash
 go run ./cmd/agent
@@ -76,6 +85,39 @@ go build ./cmd/agent
 
 ---
 
+## 🖥️ Operator Shell
+
+Once the teamserver is running, the operator shell starts automatically.
+
+| Command | Description |
+|---|---|
+| `list` | List all connected agents |
+| `interact <agentID>` | Enter the agent shell |
+| `exit` | Exit the operator shell |
+
+**Inside the agent shell:**
+
+| Command | Description |
+|---|---|
+| `<any command>` | Queue a task for the agent |
+| `back` | Return to the main shell |
+
+**Example session:**
+```
+Enter command (list, interact <agent_id>, exit): list
+Connected agents:
+ID: bbaec000-a7da-499e-8c7c-32e52a41c767, Username: chris, Hostname: target, Address: 192.168.1.5:51234
+
+Enter command (list, interact <agent_id>, exit): interact bbaec000-a7da-499e-8c7c-32e52a41c767
+[agent:bbaec000]> whoami
+Task created with ID: 62c182fa-1837-47f2-b0d4-79b392cabaef
+[agent:bbaec000]> back
+
+Enter command (list, interact <agent_id>, exit): exit
+```
+
+---
+
 ## ✅ Features
 
 - [x] TCP listener with concurrent agent handling
@@ -83,21 +125,31 @@ go build ./cmd/agent
 - [x] Agent check-in with hostname and username
 - [x] UUID-based agent registration
 - [x] Mutex-protected agent map for concurrent access
-- [x] Configurable server address via CLI flag
+- [x] Configurable server address via CLI flag (`-addr`)
 - [x] Agent beacon loop (every 10 seconds)
+- [x] Interactive operator shell
+- [x] Agent listing with full system info
+- [x] Task queuing per agent
+- [x] Log redirection to file (clean operator terminal)
 
 ---
 
-## Roadmap
+## 🗺️ Roadmap
 
-- [ ] Stage 5 — Operator CLI (interactive shell, list agents, queue tasks)
-- [ ] Stage 6 — Persistence (registry, cron, systemd)
-- [ ] Stage 7 — Evasion (sleep jitter, AMSI/ETW stubs)
-- [ ] Stage 8 — Packing (AES payload encryption, custom loaders)
-- [ ] Stage 9 — Transport hardening (TLS, malleable profiles)
+- [x] Stage 1 — TCP teamserver skeleton
+- [x] Stage 2 — Agent check-in with system info
+- [x] Stage 3 — Beacon loop
+- [x] Stage 4 — Agent registration with UUID and mutex-protected map
+- [x] Stage 5 — Operator shell (list agents, queue tasks)
+- [ ] Stage 6 — Persistent agent ID + task delivery on beacon
+- [ ] Stage 7 — Command execution on agent side
+- [ ] Stage 8 — Persistence (registry, cron, systemd)
+- [ ] Stage 9 — Evasion (sleep jitter, AMSI/ETW stubs)
+- [ ] Stage 10 — Packing (AES payload encryption, custom loaders)
+- [ ] Stage 11 — Transport hardening (TLS, malleable profiles)
 
 ---
 
-## Disclaimer
+## ⚠️ Disclaimer
 
 This project is built for **educational purposes**, **CTF competitions**, and **authorized security research**. The authors are not responsible for misuse.
