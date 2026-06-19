@@ -1,4 +1,4 @@
-# 🕸️ go-c2
+# 🕸️ NullBeacon
 
 A Command & Control (C2) framework built from scratch in Go, developed as a learning project to explore Go concurrency, networking, and security research concepts.
 
@@ -141,6 +141,8 @@ Enter command (list, interact <agent_id>, exit): exit
 - [x] Shell command execution on agent side (`os/exec`)
 - [x] Task output returned automatically to operator
 - [x] Real-time output polling in operator shell
+- [x] NullBeacon ASCII banner with colored output (`fatih/color`)
+- [x] readline-powered prompt with command history (`chzyer/readline`)
 
 ---
 
@@ -153,6 +155,7 @@ Enter command (list, interact <agent_id>, exit): exit
 - [x] Stage 5 — Operator shell (list agents, queue tasks)
 - [x] Stage 6 — Persistent agent ID + task delivery on beacon
 - [x] Stage 7 — Command execution on agent side + output return
+- [x] Stage 7.5 — NullBeacon CLI (readline, colors, banner)
 - [ ] Stage 8 — Persistence (registry, cron, systemd)
 - [ ] Stage 9 — Evasion (sleep jitter, AMSI/ETW stubs)
 - [ ] Stage 10 — Packing (AES payload encryption, custom loaders)
