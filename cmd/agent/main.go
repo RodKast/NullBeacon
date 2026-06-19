@@ -14,6 +14,7 @@ import (
 
 var (
 	serverAddr = flag.String("addr", "localhost:8080", "Server address")
+	AgentID    = "dev-agent-001"
 )
 
 func main() {
@@ -33,7 +34,7 @@ func main() {
 			log.Fatalf("failed to connect to server: %v", err)
 		}
 
-		message := fmt.Sprintf("%s:%s\n", currentUser.Username, hostname)
+		message := fmt.Sprintf("%s:%s:%s\n", AgentID, currentUser.Username, hostname)
 		_, err = conn.Write([]byte(message))
 		if err != nil {
 			log.Fatalf("failed to send message: %v", err)

