@@ -12,16 +12,19 @@ A Command & Control (C2) framework built from scratch in Go, developed as a lear
 Operator CLI
      │
      ▼
-Teamserver  ◄──── TCP :8080 ────  Agent(s)
+Teamserver ──► ListenerManager
+     │              ├── TCP Listener :8080 ◄─── Agent(s)
+     │              └── HTTP Listener :8081 (upcoming)
      │
      └── teamserver.log
 ```
 
 | Component | Description |
 |---|---|
-| `teamserver` | Listens for agent connections, registers agents, queues tasks |
-| `agent` | Beacons to the teamserver every 10 seconds with system info |
-| `operator shell` | Interactive CLI for listing agents and queuing tasks |
+| `teamserver` | Core server — manages listeners, agents, tasks |
+| `listener` | Dynamic protocol listeners (TCP, HTTP, etc.) |
+| `agent` | Beacons to a listener every 10 seconds |
+| `operator shell` | readline-powered CLI with colors and history |
 
 ---
 
@@ -31,11 +34,12 @@ Teamserver  ◄──── TCP :8080 ────  Agent(s)
 go-c2/
 ├── cmd/
 │   ├── teamserver/     # Teamserver binary + operator shell
-│   └── agent/          # Agent binary
+│   └── agent/          # Agent/implant binary
 ├── pkg/
 │   ├── agent/          # Agent struct and registration logic
+│   ├── listener/       # Dynamic listener management
 │   ├── task/           # Task struct and queue logic
-│   └── transport/      # (upcoming) Transport layer
+│   └── transport/      # (upcoming) HTTP/TLS transport
 ├── go.mod
 ├── go.sum
 └── teamserver.log      # Runtime log (gitignored)
@@ -91,6 +95,9 @@ Once the teamserver is running, the operator shell starts automatically.
 
 | Command | Description |
 |---|---|
+| `listen tcp --lhost 0.0.0.0 --lport 8080` | Start a TCP listener |
+| `listeners` | List all active listeners |
+| `stop <listenerID>` | Stop a listener |
 | `list` | List all connected agents |
 | `interact <agentID>` | Enter the agent shell |
 | `exit` | Exit the operator shell |
@@ -105,11 +112,18 @@ Once the teamserver is running, the operator shell starts automatically.
 
 **Example session:**
 ```
-Enter command (list, interact <agent_id>, exit): list
+nullbeacon> listen tcp --lhost 0.0.0.0 --lport 8080
+started listener ebfe99d4-413f-4cad-a71e-7c1d6e4e7a9c on 0.0.0.0:8080
+
+nullbeacon> listeners
+Active listeners:
+ID: ebfe99d4-413f-4cad-a71e-7c1d6e4e7a9c, Protocol: tcp, Host: 0.0.0.0, Port: 8080, Status: running
+
+nullbeacon> list
 Connected agents:
 ID: dev-agent-001, Username: chris, Hostname: target, Address: 192.168.1.5:51234
 
-Enter command (list, interact <agent_id>, exit): interact dev-agent-001
+nullbeacon> interact dev-agent-001
 [agent:dev-agen]> whoami
 [*] task queued: b90b40e6-05a1-4ebb-adee-6f5d4881109c (waiting for output...)
 output: chris
@@ -117,7 +131,10 @@ output: chris
 [b90b40e6] whoami → completed: chris
 [agent:dev-agen]> back
 
-Enter command (list, interact <agent_id>, exit): exit
+nullbeacon> stop ebfe99d4-413f-4cad-a71e-7c1d6e4e7a9c
+stopped listener ebfe99d4-413f-4cad-a71e-7c1d6e4e7a9c
+
+nullbeacon> exit
 ```
 
 ---
@@ -143,6 +160,9 @@ Enter command (list, interact <agent_id>, exit): exit
 - [x] Real-time output polling in operator shell
 - [x] NullBeacon ASCII banner with colored output (`fatih/color`)
 - [x] readline-powered prompt with command history (`chzyer/readline`)
+- [x] Dynamic listener management (start/stop/list)
+- [x] Context-based listener cancellation (`context.WithCancel`)
+- [x] Multi-protocol listener architecture (TCP now, HTTP/TLS upcoming)
 
 ---
 
@@ -156,6 +176,7 @@ Enter command (list, interact <agent_id>, exit): exit
 - [x] Stage 6 — Persistent agent ID + task delivery on beacon
 - [x] Stage 7 — Command execution on agent side + output return
 - [x] Stage 7.5 — NullBeacon CLI (readline, colors, banner)
+- [x] Stage 7.6 — Dynamic listener management (start/stop/list)
 - [ ] Stage 8 — Persistence (registry, cron, systemd)
 - [ ] Stage 9 — Evasion (sleep jitter, AMSI/ETW stubs)
 - [ ] Stage 10 — Packing (AES payload encryption, custom loaders)
