@@ -12,6 +12,8 @@ import (
 
 	"github.com/RodKast/go-c2/pkg/agent"
 	"github.com/RodKast/go-c2/pkg/task"
+	"github.com/chzyer/readline"
+	"github.com/fatih/color"
 )
 
 var (
@@ -19,7 +21,21 @@ var (
 	agentMu sync.Mutex
 )
 
+func printBanner() {
+	red := color.New(color.FgRed)
+	cyan := color.New(color.FgCyan)
+
+	red.Println(`  _   _       _ _ ____                            `)
+	red.Println(` | \ | |     | | |  _ \                           `)
+	red.Println(` |  \| |_   _| | | |_) | ___  __ _  ___ ___  _ __`)
+	red.Println(` | . | | | | | | |  _ < / _ \/ _` + "`" + `|/ __/ _  \| '_ \`)
+	red.Println(` | |\  | |_| | | | |_) |  __/ (_| | (_| (_) | | | |`)
+	red.Println(` |_| \_|\__,_|_|_|____/ \___|\__,_|\___\___/|_| |_|`)
+	cyan.Println("\n  NullBeacon C2 | For authorized use only\n")
+}
+
 func main() {
+	printBanner()
 	logFile, err := os.OpenFile("teamserver.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
 	if err != nil {
 		log.Fatalf("failed to open log file: %v", err)
@@ -113,10 +129,13 @@ func handleConnection(conn net.Conn) {
 }
 
 func operatorShell() {
-	reader := bufio.NewReader(os.Stdin)
+	rl, _ := readline.New("nullbeacon> ")
+	defer rl.Close()
 	for {
-		fmt.Print("Enter command (list, interact <agent_id>, exit): ")
-		command, _ := reader.ReadString('\n')
+		command, err := rl.Readline()
+		if err != nil {
+			break
+		}
 		command = strings.TrimSpace(command)
 
 		switch {
@@ -164,12 +183,14 @@ func interactWithAgent(agentID string) {
 		return
 	}
 
-	reader := bufio.NewReader(os.Stdin)
+	rl, _ := readline.New(fmt.Sprintf("[agent:%s]> ", a.ID[:8]))
+	defer rl.Close()
 
 	for {
-		fmt.Printf("[agent:%s]> ", a.ID[:8])
-
-		command, _ := reader.ReadString('\n')
+		command, err := rl.Readline()
+		if err != nil {
+			break
+		}
 		command = strings.TrimSpace(command)
 
 		switch command {
