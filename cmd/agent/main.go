@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/user"
 	"strings"
+	"time"
 )
 
 var (
@@ -17,31 +18,36 @@ var (
 
 func main() {
 	flag.Parse()
-	conn, err := net.Dial("tcp", *serverAddr)
-	if err != nil {
-		log.Fatalf("failed to connect to server: %v", err)
-	}
-	defer conn.Close()
-
 	hostname, err := os.Hostname()
 	if err != nil {
 		log.Fatalf("failed to get hostname: %v", err)
 	}
-	user, err := user.Current()
+	currentUser, err := user.Current()
 	if err != nil {
 		log.Fatalf("failed to get current user: %v", err)
 	}
-	message := fmt.Sprintf("%s:%s\n", user.Username, hostname)
-	_, err = conn.Write([]byte(message))
-	if err != nil {
-		log.Fatalf("failed to send message: %v", err)
+	for {
+
+		conn, err := net.Dial("tcp", *serverAddr)
+		if err != nil {
+			log.Fatalf("failed to connect to server: %v", err)
+		}
+
+		message := fmt.Sprintf("%s:%s\n", currentUser.Username, hostname)
+		_, err = conn.Write([]byte(message))
+		if err != nil {
+			log.Fatalf("failed to send message: %v", err)
+		}
+
+		reader := bufio.NewReader(conn)
+		response, err := reader.ReadString('\n')
+		if err != nil {
+			log.Fatalf("failed to read response: %v", err)
+		}
+
+		log.Printf("received response: %s", strings.TrimSpace(response))
+		conn.Close()
+		time.Sleep(10 * time.Second)
 	}
 
-	reader := bufio.NewReader(conn)
-	response, err := reader.ReadString('\n')
-	if err != nil {
-		log.Fatalf("failed to read response: %v", err)
-	}
-
-	log.Printf("received response: %s", strings.TrimSpace(response))
 }
