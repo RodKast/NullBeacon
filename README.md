@@ -99,19 +99,23 @@ Once the teamserver is running, the operator shell starts automatically.
 
 | Command | Description |
 |---|---|
-| `<any command>` | Queue a task for the agent |
+| `<any command>` | Queue a task, wait for output automatically |
+| `tasks` | List all tasks and their output |
 | `back` | Return to the main shell |
 
 **Example session:**
 ```
 Enter command (list, interact <agent_id>, exit): list
 Connected agents:
-ID: bbaec000-a7da-499e-8c7c-32e52a41c767, Username: chris, Hostname: target, Address: 192.168.1.5:51234
+ID: dev-agent-001, Username: chris, Hostname: target, Address: 192.168.1.5:51234
 
-Enter command (list, interact <agent_id>, exit): interact bbaec000-a7da-499e-8c7c-32e52a41c767
-[agent:bbaec000]> whoami
-Task created with ID: 62c182fa-1837-47f2-b0d4-79b392cabaef
-[agent:bbaec000]> back
+Enter command (list, interact <agent_id>, exit): interact dev-agent-001
+[agent:dev-agen]> whoami
+[*] task queued: b90b40e6-05a1-4ebb-adee-6f5d4881109c (waiting for output...)
+output: chris
+[agent:dev-agen]> tasks
+[b90b40e6] whoami → completed: chris
+[agent:dev-agen]> back
 
 Enter command (list, interact <agent_id>, exit): exit
 ```
@@ -131,6 +135,12 @@ Enter command (list, interact <agent_id>, exit): exit
 - [x] Agent listing with full system info
 - [x] Task queuing per agent
 - [x] Log redirection to file (clean operator terminal)
+- [x] Persistent agent ID baked in at build time via `ldflags`
+- [x] Returning beacon detection (no duplicate registration)
+- [x] Task delivery on beacon
+- [x] Shell command execution on agent side (`os/exec`)
+- [x] Task output returned automatically to operator
+- [x] Real-time output polling in operator shell
 
 ---
 
@@ -141,8 +151,8 @@ Enter command (list, interact <agent_id>, exit): exit
 - [x] Stage 3 — Beacon loop
 - [x] Stage 4 — Agent registration with UUID and mutex-protected map
 - [x] Stage 5 — Operator shell (list agents, queue tasks)
-- [ ] Stage 6 — Persistent agent ID + task delivery on beacon
-- [ ] Stage 7 — Command execution on agent side
+- [x] Stage 6 — Persistent agent ID + task delivery on beacon
+- [x] Stage 7 — Command execution on agent side + output return
 - [ ] Stage 8 — Persistence (registry, cron, systemd)
 - [ ] Stage 9 — Evasion (sleep jitter, AMSI/ETW stubs)
 - [ ] Stage 10 — Packing (AES payload encryption, custom loaders)
