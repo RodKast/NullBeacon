@@ -3,7 +3,7 @@
 [![Go](https://github.com/RodKast/NullBeacon/actions/workflows/go.yml/badge.svg)](https://github.com/RodKast/NullBeacon/actions/workflows/go.yml)
 ![Go Version](https://img.shields.io/badge/Go-1.21+-00ADD8?style=flat&logo=go)
 ![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20Windows-lightgrey)
-![License](https://img.shields.io/badge/license-GPL%20v3-blue)
+[![License](https://img.shields.io/badge/license-GPL%20v3-blue)](LICENSE)
 ![Status](https://img.shields.io/badge/status-active%20development-orange)
 
 > A modular Command & Control (C2) framework built from scratch in Go for authorized security research, CTF competitions, and home lab red teaming.
