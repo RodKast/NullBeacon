@@ -40,7 +40,9 @@ func handleConnection(conn net.Conn) {
 		a.ID = agentID
 		agents[agentID] = a
 		log.Printf("new agent registered: %s", agentID)
+		fmt.Printf("new agent registered: %s@%s (%s)\n", username, hostname, agentID)
 	} else {
+		a.LastSeen = time.Now()
 		log.Printf("returning beacon: %s", agentID)
 	}
 	agentMu.Unlock()

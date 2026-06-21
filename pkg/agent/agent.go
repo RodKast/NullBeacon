@@ -2,6 +2,7 @@ package agent
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/RodKast/go-c2/pkg/task"
 	"github.com/google/uuid"
@@ -13,6 +14,7 @@ type Agent struct {
 	Hostname string
 	Address  string
 	Tasks    []*task.Task
+	LastSeen time.Time
 }
 
 func (a *Agent) String() string {
@@ -25,5 +27,6 @@ func NewAgent(username, hostname, address string) *Agent {
 		Username: username,
 		Hostname: hostname,
 		Address:  address,
+		LastSeen: time.Now(),
 	}
 }
