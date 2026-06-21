@@ -259,6 +259,12 @@ nullbeacon> exit
 - [ ] Stage 10 — Packing (AES payload encryption, custom loaders)
 - [ ] Stage 11 — Transport hardening (HTTP listener, malleable profiles)
 
+### 🚀 Release (Post Stage 10)
+- [ ] Stage R1 — Install script (`curl | bash` one-liner, moves binary to `/usr/local/bin`)
+- [ ] Stage R2 — GitHub Actions release workflow (auto-build on version tag)
+- [ ] Stage R3 — Uninstall command (`nullbeacon --uninstall`)
+- [ ] Stage R4 — GitHub Release v0.1.0 with pre-compiled Linux binary
+
 ### 🥷 Stealth Roadmap (Post Stage 11)
 - [ ] Stage 12 — Process injection (execute inside legitimate processes)
 - [ ] Stage 13 — Living off the Land (LOLBins — use built-in OS tools)
