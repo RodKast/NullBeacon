@@ -33,16 +33,22 @@ Teamserver ──► ListenerManager
 ```
 go-c2/
 ├── cmd/
-│   ├── teamserver/     # Teamserver binary + operator shell
-│   └── agent/          # Agent/implant binary
+│   ├── teamserver/
+│   │   ├── main.go         # Entry point, banner, operator shell
+│   │   ├── handlers.go     # Agent connection handling
+│   │   ├── listeners.go    # Listener start/stop/list
+│   │   ├── agents.go       # Agent list and interact shell
+│   │   ├── generate.go     # Agent binary generation
+│   │   └── help.go         # Help menu
+│   └── agent/              # Agent/implant binary
 ├── pkg/
-│   ├── agent/          # Agent struct and registration logic
-│   ├── listener/       # Dynamic listener management
-│   ├── task/           # Task struct and queue logic
-│   └── transport/      # (upcoming) HTTP/TLS transport
+│   ├── agent/              # Agent struct and registration logic
+│   ├── listener/           # Dynamic listener management
+│   ├── task/               # Task struct and queue logic
+│   └── transport/          # (upcoming) HTTP/TLS transport
 ├── go.mod
 ├── go.sum
-└── teamserver.log      # Runtime log (gitignored)
+└── teamserver.log          # Runtime log (gitignored)
 ```
 
 ---
@@ -100,6 +106,8 @@ Once the teamserver is running, the operator shell starts automatically.
 | `stop <listenerID>` | Stop a listener |
 | `list` | List all connected agents |
 | `interact <agentID>` | Enter the agent shell |
+| `generate --os linux --arch amd64 --lhost <ip> --lport <port>` | Generate an agent binary |
+| `help` | Show the help menu |
 | `exit` | Exit the operator shell |
 
 **Inside the agent shell:**
@@ -163,6 +171,11 @@ nullbeacon> exit
 - [x] Dynamic listener management (start/stop/list)
 - [x] Context-based listener cancellation (`context.WithCancel`)
 - [x] Multi-protocol listener architecture (TCP now, HTTP/TLS upcoming)
+- [x] Agent binary generation with cross-compilation (`GOOS`/`GOARCH`)
+- [x] Random hacking-themed agent filenames (e.g. `GHOST_COBRA.elf`)
+- [x] Agent saves to operator's current working directory
+- [x] Colored help menu with full command reference
+- [x] Teamserver split into focused files (handlers, listeners, agents, generate, help)
 
 ---
 
@@ -177,6 +190,8 @@ nullbeacon> exit
 - [x] Stage 7 — Command execution on agent side + output return
 - [x] Stage 7.5 — NullBeacon CLI (readline, colors, banner)
 - [x] Stage 7.6 — Dynamic listener management (start/stop/list)
+- [x] Stage 7.7 — Agent generation with cross-compilation and themed names
+- [x] Stage 7.8 — Help menu and teamserver refactor into focused files
 - [ ] Stage 8 — Persistence (registry, cron, systemd)
 - [ ] Stage 9 — Evasion (sleep jitter, AMSI/ETW stubs)
 - [ ] Stage 10 — Packing (AES payload encryption, custom loaders)
