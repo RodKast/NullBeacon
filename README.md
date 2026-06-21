@@ -224,6 +224,12 @@ nullbeacon> exit
 - [x] Encrypted C2 channel via TLS
 - [x] Agent retry loop — no crashes on connection failure
 
+### Persistence
+- [x] Linux — cron `@reboot` entry with current executable path
+- [x] Windows — registry `HKCU\Software\Microsoft\Windows\CurrentVersion\Run`
+- [x] macOS stub — no-op for development builds
+- [x] OS-specific build files (`_linux.go`, `_windows.go`, `_other.go`)
+
 ---
 
 ## 🗺️ Roadmap
@@ -244,12 +250,12 @@ nullbeacon> exit
 - [x] Stage 7.10 — Operator UX (agent notifications, timestamps, remove command)
 - [x] Stage 7.11 — Basic OPSEC (strip symbols, sleep jitter)
 - [x] Stage 7.12 — TLS transport (encrypted C2 channel)
+- [x] Stage 8 — Persistence (Linux cron @reboot, Windows registry Run key)
 
 ### 🔨 In Progress
-- [ ] Stage 8 — Persistence (Linux cron, Windows registry)
+- [ ] Stage 9 — Evasion (AMSI/ETW stubs, sleep obfuscation)
 
 ### 📋 Planned
-- [ ] Stage 9 — Evasion (AMSI/ETW stubs, sleep obfuscation)
 - [ ] Stage 10 — Packing (AES payload encryption, custom loaders)
 - [ ] Stage 11 — Transport hardening (HTTP listener, malleable profiles)
 
