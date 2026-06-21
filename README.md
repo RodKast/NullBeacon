@@ -14,6 +14,7 @@ Operator CLI
      ▼
 Teamserver ──► ListenerManager
      │              ├── TCP Listener :8080 ◄─── Agent(s)
+     │              ├── TLS Listener :8443 ◄─── Agent(s) (encrypted)
      │              └── HTTP Listener :8081 (upcoming)
      │
      └── teamserver.log
@@ -23,7 +24,8 @@ Teamserver ──► ListenerManager
 |---|---|
 | `teamserver` | Core server — manages listeners, agents, tasks |
 | `listener` | Dynamic protocol listeners (TCP, HTTP, etc.) |
-| `agent` | Beacons to a listener every 10 seconds |
+| `agent` | Beacons home with jitter (8-12s), survives connection failures |
+| `tls.go` | Self-signed TLS certificate generation for encrypted comms |
 | `operator shell` | readline-powered CLI with colors and history |
 
 ---
@@ -45,7 +47,7 @@ go-c2/
 │   ├── agent/              # Agent struct and registration logic
 │   ├── listener/           # Dynamic listener management
 │   ├── task/               # Task struct and queue logic
-│   └── transport/          # (upcoming) HTTP/TLS transport
+│   └── transport/          # (upcoming) HTTP transport
 ├── go.mod
 ├── go.sum
 └── teamserver.log          # Runtime log (gitignored)
@@ -102,10 +104,12 @@ Once the teamserver is running, the operator shell starts automatically.
 | Command | Description |
 |---|---|
 | `listen tcp --lhost 0.0.0.0 --lport 8080` | Start a TCP listener |
+| `listen tls --lhost 0.0.0.0 --lport 8443` | Start a TLS listener (encrypted) |
 | `listeners` | List all active listeners |
 | `stop <listenerID>` | Stop a listener |
 | `list` | List all connected agents |
 | `interact <agentID>` | Enter the agent shell |
+| `remove <agentID>` | Remove a dead agent from the list |
 | `generate --os linux --arch amd64 --lhost <ip> --lport <port>` | Generate an agent binary |
 | `help` | Show the help menu |
 | `exit` | Exit the operator shell |
@@ -129,7 +133,7 @@ ID: ebfe99d4-413f-4cad-a71e-7c1d6e4e7a9c, Protocol: tcp, Host: 0.0.0.0, Port: 80
 
 nullbeacon> list
 Connected agents:
-ID: dev-agent-001, Username: chris, Hostname: target, Address: 192.168.1.5:51234
+ID: dev-agent-001, Username: chris, Hostname: target, Address: 192.168.1.5:51234, Last Seen: 2026-06-21 16:42:42
 
 nullbeacon> interact dev-agent-001
 [agent:dev-agen]> whoami
@@ -176,6 +180,15 @@ nullbeacon> exit
 - [x] Agent saves to operator's current working directory
 - [x] Colored help menu with full command reference
 - [x] Teamserver split into focused files (handlers, listeners, agents, generate, help)
+- [x] Agent reliability — retry loop, no fatal crashes, multi-line output support
+- [x] New agent notification printed to operator terminal on first check-in
+- [x] Last Seen timestamp on agent check-in
+- [x] Agent removal command (`remove <agentID>`)
+- [x] Sleep jitter — randomized beacon interval (8-12 seconds)
+- [x] Debug symbols stripped from generated binaries (`-s -w` ldflags)
+- [x] TLS transport — encrypted C2 channel with self-signed certificate
+- [x] TLS listener support (`listen tls`)
+- [x] Agent connects via TLS (`tls.Dial`)
 
 ---
 
@@ -192,10 +205,10 @@ nullbeacon> exit
 - [x] Stage 7.6 — Dynamic listener management (start/stop/list)
 - [x] Stage 7.7 — Agent generation with cross-compilation and themed names
 - [x] Stage 7.8 — Help menu and teamserver refactor into focused files
-- [ ] Stage 7.9 — Agent reliability (retry loop, multi-line output, no fatal crashes)
-- [ ] Stage 7.10 — Operator UX (new agent notifications, timestamps, agent removal)
-- [ ] Stage 7.11 — Basic OPSEC (strip symbols, sleep jitter)
-- [ ] Stage 7.12 — TLS transport (encrypt the C2 channel)
+- [x] Stage 7.9 — Agent reliability (retry loop, multi-line output, no fatal crashes)
+- [x] Stage 7.10 — Operator UX (new agent notifications, timestamps, agent removal)
+- [x] Stage 7.11 — Basic OPSEC (strip symbols, sleep jitter)
+- [x] Stage 7.12 — TLS transport (encrypt the C2 channel)
 - [ ] Stage 8 — Persistence (registry, cron, systemd)
 - [ ] Stage 9 — Evasion (sleep jitter, AMSI/ETW stubs)
 - [ ] Stage 10 — Packing (AES payload encryption, custom loaders)
