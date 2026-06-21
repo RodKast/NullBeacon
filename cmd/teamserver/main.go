@@ -78,6 +78,8 @@ func operatorShell() {
 			generateAgent(command)
 		case command == "help":
 			printHelp()
+		case strings.HasPrefix(command, "remove"):
+			removeAgent(command)
 		default:
 			fmt.Println("Unknown command.")
 		}

@@ -20,9 +20,11 @@ func listAgents() {
 
 	fmt.Println("Connected agents:")
 	for id, a := range agents {
-		fmt.Printf("ID: %s, Username: %s, Hostname: %s, Address: %s\n", id, a.Username, a.Hostname, a.Address)
+		LastSeen := a.LastSeen.Format("2006-01-02 15:04:05")
+		fmt.Printf("ID: %s, Username: %s, Hostname: %s, Address: %s, Last Seen: %s\n", id, a.Username, a.Hostname, a.Address, LastSeen)
 	}
 }
+
 
 func interactWithAgent(agentID string) {
 	agentMu.Lock()
@@ -62,3 +64,23 @@ func interactWithAgent(agentID string) {
 		}
 	}
 }
+
+func removeAgent(command string) {
+	parts := strings.Split(command, " ")
+	if len(parts) != 2 {
+		fmt.Println("Usage: remove <agent_id>")
+		return
+	}
+	agentID := parts[1]
+
+	agentMu.Lock()
+	defer agentMu.Unlock()
+
+	if _, exists := agents[agentID]; !exists {
+		fmt.Printf("agent %s not found\n", agentID)
+		return
+	}
+
+	delete(agents, agentID)
+	fmt.Printf("agent %s removed\n", agentID)
+}		
