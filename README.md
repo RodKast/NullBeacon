@@ -192,6 +192,10 @@ nullbeacon> exit
 - [x] Stage 7.6 — Dynamic listener management (start/stop/list)
 - [x] Stage 7.7 — Agent generation with cross-compilation and themed names
 - [x] Stage 7.8 — Help menu and teamserver refactor into focused files
+- [ ] Stage 7.9 — Agent reliability (retry loop, multi-line output, no fatal crashes)
+- [ ] Stage 7.10 — Operator UX (new agent notifications, timestamps, agent removal)
+- [ ] Stage 7.11 — Basic OPSEC (strip symbols, sleep jitter)
+- [ ] Stage 7.12 — TLS transport (encrypt the C2 channel)
 - [ ] Stage 8 — Persistence (registry, cron, systemd)
 - [ ] Stage 9 — Evasion (sleep jitter, AMSI/ETW stubs)
 - [ ] Stage 10 — Packing (AES payload encryption, custom loaders)
