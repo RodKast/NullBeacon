@@ -50,7 +50,7 @@ func generateAgent(command string) {
 	}
 
 	serverAddr := fmt.Sprintf("%s:%s", lhost, lport)
-	ldflags := fmt.Sprintf("-X main.AgentID=%s -X main.ServerAddr=%s", agentID, serverAddr)
+	ldflags := fmt.Sprintf("-s -w -X main.AgentID=%s -X main.ServerAddr=%s", agentID, serverAddr)
 
 	cmd := exec.Command("go", "build", "-ldflags", ldflags, "-o", outputFile, "./cmd/agent")
 	cmd.Env = append(os.Environ(), "GOOS="+goos, "GOARCH="+goarch)
