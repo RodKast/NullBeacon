@@ -1,6 +1,12 @@
 # 🕸️ NullBeacon
 
-> A Command & Control (C2) framework built from scratch in Go for authorized security research, CTF competitions, and home lab red teaming.
+[![Go](https://github.com/RodKast/NullBeacon/actions/workflows/go.yml/badge.svg)](https://github.com/RodKast/NullBeacon/actions/workflows/go.yml)
+![Go Version](https://img.shields.io/badge/Go-1.21+-00ADD8?style=flat&logo=go)
+![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20Windows-lightgrey)
+![License](https://img.shields.io/badge/license-GPL%20v3-blue)
+![Status](https://img.shields.io/badge/status-active%20development-orange)
+
+> A modular Command & Control (C2) framework built from scratch in Go for authorized security research, CTF competitions, and home lab red teaming.
 
 > ⚠️ **For authorized security research, CTF, and home lab use only. Never deploy against systems you do not own or have explicit written permission to test.**
 
@@ -69,8 +75,8 @@ go-c2/
 **Requirements:** Go 1.21+
 
 ```bash
-git clone https://github.com/RodKast/go-c2.git
-cd go-c2
+git clone https://github.com/RodKast/NullBeacon.git
+cd NullBeacon
 go mod tidy
 ```
 
@@ -222,7 +228,7 @@ nullbeacon> exit
 
 ## 🗺️ Roadmap
 
-### Completed
+### ✅ Completed
 - [x] Stage 1 — TCP teamserver skeleton
 - [x] Stage 2 — Agent check-in with system info
 - [x] Stage 3 — Beacon loop
@@ -239,20 +245,32 @@ nullbeacon> exit
 - [x] Stage 7.11 — Basic OPSEC (strip symbols, sleep jitter)
 - [x] Stage 7.12 — TLS transport (encrypted C2 channel)
 
-### In Progress
+### 🔨 In Progress
 - [ ] Stage 8 — Persistence (Linux cron, Windows registry)
 
-### Planned
+### 📋 Planned
 - [ ] Stage 9 — Evasion (AMSI/ETW stubs, sleep obfuscation)
 - [ ] Stage 10 — Packing (AES payload encryption, custom loaders)
 - [ ] Stage 11 — Transport hardening (HTTP listener, malleable profiles)
 
-### Stealth Roadmap (Post Stage 11)
+### 🥷 Stealth Roadmap (Post Stage 11)
 - [ ] Stage 12 — Process injection (execute inside legitimate processes)
 - [ ] Stage 13 — Living off the Land (LOLBins — use built-in OS tools)
 - [ ] Stage 14 — Malleable C2 profiles (traffic mimics Google/Microsoft)
 - [ ] Stage 15 — Syscall obfuscation (bypass EDR user-mode hooks)
 - [ ] Stage 16 — In-memory execution (never touch disk)
+
+---
+
+## 🤝 Contributing
+
+This is a learning project but contributions and feedback are welcome. Open an issue or PR on GitHub.
+
+---
+
+## 📄 License
+
+GPL v3 License — see [LICENSE](LICENSE) for details.
 
 ---
 
