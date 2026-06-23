@@ -4,8 +4,7 @@
 [![Go Version](https://img.shields.io/badge/Go-1.21+-00ADD8?style=flat&logo=go&logoColor=white)](https://golang.org)
 [![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20Windows-lightgrey?style=flat)](https://github.com/RodKast/NullBeacon)
 [![License](https://img.shields.io/badge/license-GPL%20v3-blue?style=flat)](LICENSE)
-[![Status](https://img.shields.io/badge/status-active%20development-orange?style=flat)
-[![Release](https://img.shields.io/github/v/release/RodKast/NullBeacon?style=flat&color=green)](https://github.com/RodKast/NullBeacon/releases/latest)](https://github.com/RodKast/NullBeacon)
+[![Status](https://img.shields.io/badge/status-active%20development-orange?style=flat)](https://github.com/RodKast/NullBeacon)
 
 > **NullBeacon** is a modular, beacon-based Command & Control framework written in Go — built for authorized security research, CTF competitions, and home lab red team operations.
 
@@ -121,9 +120,16 @@ NullBeacon/
 
 ## Installation
 
-**Option 1 — One-liner install (Linux, requires root):**
+**Option 1 — Install from release (Linux, requires root):**
+
+1. Download the latest release from the [Releases page](https://github.com/RodKast/NullBeacon/releases/latest)
+2. Run the install script:
 ```bash
-curl -fsSL https://raw.githubusercontent.com/RodKast/NullBeacon/main/install.sh | sudo bash
+sudo bash install.sh
+```
+3. Start the teamserver:
+```bash
+nullbeacon
 ```
 
 **Option 2 — Build from source (requires Go 1.21+):**
@@ -132,6 +138,7 @@ git clone https://github.com/RodKast/NullBeacon.git
 cd NullBeacon
 go mod tidy
 go build ./...
+go run ./cmd/teamserver
 ```
 
 ---
