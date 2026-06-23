@@ -21,9 +21,8 @@ Operator Terminal
  NullBeacon Teamserver
       │
       ├──► ListenerManager
-      │         ├── TCP  Listener  ◄──── Agent beacon
-      │         ├── TLS  Listener  ◄──── Agent beacon (encrypted)
-      │         └── HTTP Listener  (upcoming)
+      │         ├── TLS   Listener :8443 ◄──── Agent beacon (encrypted)
+      │         └── HTTPS Listener :443  ◄──── Agent beacon (upcoming)
       │
       ├──► Agent Registry (UUID, hostname, username, last seen)
       ├──► Task Queue (per agent, delivered on next beacon)
@@ -33,7 +32,7 @@ Operator Terminal
 | Component | Role |
 |---|---|
 | `teamserver` | Core server — listeners, agents, task queue, operator shell |
-| `listener` | Pluggable protocol listeners (TCP, TLS, HTTP) |
+| `listener` | Pluggable protocol listeners (TLS now, HTTPS upcoming) |
 | `agent` | Implant — beacons home, executes tasks, returns output |
 | `tls.go` | Self-signed TLS certificate generation |
 | `generate.go` | Cross-compiles agent binaries for Linux / Windows |
@@ -121,8 +120,7 @@ tail -f teamserver.log
 
 | Command | Description |
 |---|---|
-| `listen tcp --lhost 0.0.0.0 --lport 8080` | Start a plain TCP listener |
-| `listen tls --lhost 0.0.0.0 --lport 8443` | Start an encrypted TLS listener |
+| `listen --lhost 0.0.0.0 --lport 8443` | Start an encrypted TLS listener |
 | `listeners` | List all active listeners |
 | `stop <listenerID>` | Stop and remove a listener |
 
@@ -155,7 +153,7 @@ tail -f teamserver.log
 ## 💡 Example Session
 
 ```
-nullbeacon> listen tls --lhost 0.0.0.0 --lport 8443
+nullbeacon> listen --lhost 0.0.0.0 --lport 8443
 started listener a1b2c3d4 on 0.0.0.0:8443
 
 nullbeacon> generate --os linux --arch amd64 --lhost 10.0.0.1 --lport 8443
@@ -185,7 +183,7 @@ nullbeacon> exit
 ## ✅ Features
 
 ### Core
-- [x] TCP and TLS listeners with concurrent agent handling
+- [x] TLS-only listeners — all communication encrypted by default
 - [x] Read timeout protection against hung connections
 - [x] Agent check-in with hostname and username
 - [x] UUID-based agent registration
@@ -210,7 +208,7 @@ nullbeacon> exit
 ### Listener Management
 - [x] Dynamic listener start/stop/list at runtime
 - [x] Context-based listener cancellation (`context.WithCancel`)
-- [x] TCP and TLS listener support
+- [x] TLS-only listener support — plain TCP removed
 - [x] Self-signed TLS certificate generated on startup
 
 ### Agent Generation
