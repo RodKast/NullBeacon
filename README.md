@@ -1,50 +1,85 @@
-# NullBeacon
+# NullBeacon C2
 
-[![Go](https://github.com/RodKast/NullBeacon/actions/workflows/go.yml/badge.svg)](https://github.com/RodKast/NullBeacon/actions/workflows/go.yml)
-![Go Version](https://img.shields.io/badge/Go-1.21+-00ADD8?style=flat&logo=go)
-![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20Windows-lightgrey)
-[![License](https://img.shields.io/badge/license-GPL%20v3-blue)](LICENSE)
-![Status](https://img.shields.io/badge/status-active%20development-orange)
+[![Build](https://github.com/RodKast/NullBeacon/actions/workflows/go.yml/badge.svg)](https://github.com/RodKast/NullBeacon/actions/workflows/go.yml)
+[![Go Version](https://img.shields.io/badge/Go-1.21+-00ADD8?style=flat&logo=go&logoColor=white)](https://golang.org)
+[![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20Windows-lightgrey?style=flat)](https://github.com/RodKast/NullBeacon)
+[![License](https://img.shields.io/badge/license-GPL%20v3-blue?style=flat)](LICENSE)
+[![Status](https://img.shields.io/badge/status-active%20development-orange?style=flat)](https://github.com/RodKast/NullBeacon)
 
-NullBeacon is a modular, beacon-based Command & Control (C2) framework written in Go. Built from the ground up for authorized security research, CTF competitions, and home lab red team operations.
+> **NullBeacon** is a modular, beacon-based Command & Control framework written in Go — built for authorized security research, CTF competitions, and home lab red team operations.
 
-> **For authorized use only.** Never deploy against systems you do not own or have explicit written permission to test.
+---
+
+> ⚠️ **Authorized use only.** This tool is intended for legal security testing on systems you own or have explicit written permission to test. Misuse is strictly prohibited.
+
+---
+
+## Table of Contents
+
+- [Overview](#overview)
+- [Architecture](#architecture)
+- [Features](#features)
+- [Installation](#installation)
+- [Quick Start](#quick-start)
+- [Operator Reference](#operator-reference)
+- [Roadmap](#roadmap)
+- [Contributing](#contributing)
+- [License](#license)
 
 ---
 
 ## Overview
 
-NullBeacon follows a beacon-based architecture similar to Cobalt Strike and Sliver. Agents check in to the teamserver at randomized intervals, receive queued tasks, execute them, and return output — all over an encrypted TLS channel.
+NullBeacon implements a **beacon-based C2 model** — agents check in at randomized intervals (jittered sleep), receive queued tasks, execute them on the target, and return output to the operator. All communication is encrypted over TLS.
+
+The framework is designed around the principle of **separation of concerns** — listeners, agents, tasks, and the operator shell are all independent components that can be extended without modifying core logic.
+
+---
+
+## Architecture
 
 ```
-Operator
-   │
-   ▼
-NullBeacon Teamserver
-   │
-   ├── Listener Manager
-   │       ├── TLS  Listener  ◄──── Agent (encrypted beacon)
-   │       └── HTTPS Listener ◄──── Agent (upcoming)
-   │
-   ├── Agent Registry    — UUID, hostname, username, last seen
-   ├── Task Queue        — per-agent, delivered on next beacon
-   └── teamserver.log    — all events logged to file
+Operator Terminal
+       │
+       ▼
+ ┌─────────────────────────────┐
+ │      NullBeacon Teamserver  │
+ │                             │
+ │  ┌─────────────────────┐   │
+ │  │   Listener Manager  │   │
+ │  │  TLS  :port ◄───────┼───┼──── Agent beacon (encrypted)
+ │  │  HTTPS :443 (soon)  │   │
+ │  └─────────────────────┘   │
+ │                             │
+ │  Agent Registry             │
+ │  Task Queue                 │
+ │  teamserver.log             │
+ └─────────────────────────────┘
 ```
+
+| Component | Description |
+|---|---|
+| `teamserver` | Core server — manages listeners, agents, and tasks |
+| `listener` | Pluggable TLS listener (HTTPS upcoming) |
+| `agent` | Implant — beacons home, executes tasks, returns output |
+| `generate.go` | Cross-compiles agents for Linux and Windows |
+| `tls.go` | Generates self-signed TLS certificates at runtime |
 
 ---
 
 ## Features
 
-| Category | Feature |
+| Category | Details |
 |---|---|
-| **Transport** | TLS-only communication — all traffic encrypted by default |
-| **Listeners** | Dynamic start/stop/list at runtime, context-based cancellation |
-| **Agents** | UUID-based registration, returning beacon detection, last seen timestamp |
-| **Tasks** | Per-agent task queue, delivered on beacon, output returned automatically |
-| **Generation** | Cross-compile agents for Linux/Windows, random codename filenames |
-| **Persistence** | Linux cron `@reboot`, Windows registry `Run` key |
-| **OPSEC** | Sleep jitter (8-12s), stripped debug symbols, TLS encryption |
-| **Operator UX** | readline shell, colored output, new agent notifications, help menu |
+| **Transport** | TLS-only — all C2 traffic encrypted by default |
+| **Listeners** | Dynamic start/stop/list, context-based cancellation |
+| **Agents** | UUID registration, returning beacon detection, last seen tracking |
+| **Tasks** | Per-agent queue, delivered on next beacon, output returned automatically |
+| **Generation** | Cross-compile for Linux/Windows, random codename filenames, debug symbols stripped |
+| **Persistence** | Linux cron `@reboot` · Windows registry `Run` key |
+| **Evasion** | AMSI patch · ETW stub (Windows) |
+| **OPSEC** | Sleep jitter (8–12s) · stripped symbols · TLS encryption |
+| **Operator UX** | readline shell · colored output · agent notifications · help menu |
 
 ---
 
@@ -54,26 +89,30 @@ NullBeacon Teamserver
 NullBeacon/
 ├── cmd/
 │   ├── teamserver/
-│   │   ├── main.go         # Entry point, banner, operator shell
-│   │   ├── handlers.go     # Agent connection and task delivery
-│   │   ├── listeners.go    # Listener start/stop/list
-│   │   ├── agents.go       # Agent list, interact shell, remove
-│   │   ├── generate.go     # Agent binary generation
-│   │   ├── tls.go          # TLS certificate generation
-│   │   └── help.go         # Help menu
+│   │   ├── main.go             # Entry point, banner, operator shell
+│   │   ├── handlers.go         # Agent connection and task delivery
+│   │   ├── listeners.go        # Listener start/stop/list
+│   │   ├── agents.go           # Agent list, interact shell, remove
+│   │   ├── generate.go         # Agent binary generation
+│   │   ├── tls.go              # TLS certificate generation
+│   │   └── help.go             # Help menu
 │   └── agent/
-│       ├── main.go         # Beacon loop, task execution
-│       ├── persist_linux.go
-│       ├── persist_windows.go
-│       └── persist_other.go
+│       ├── main.go             # Beacon loop, task execution
+│       ├── persist_linux.go    # Linux persistence (cron)
+│       ├── persist_windows.go  # Windows persistence (registry)
+│       ├── persist_other.go    # Stub for other platforms
+│       ├── evasion_windows.go  # AMSI + ETW patching
+│       └── evasion_other.go    # Stub for other platforms
 ├── pkg/
-│   ├── agent/              # Agent struct
-│   ├── listener/           # Listener struct with StartTLS
-│   └── task/               # Task struct
-├── .github/workflows/
-│   └── go.yml              # CI pipeline
+│   ├── agent/                  # Agent struct and registration
+│   ├── listener/               # Listener struct with StartTLS
+│   └── task/                   # Task struct and status tracking
+├── .github/
+│   └── workflows/
+│       └── go.yml              # CI — build and test on push
 ├── go.mod
-└── go.sum
+├── go.sum
+└── teamserver.log              # Runtime log (gitignored)
 ```
 
 ---
@@ -86,46 +125,49 @@ NullBeacon/
 git clone https://github.com/RodKast/NullBeacon.git
 cd NullBeacon
 go mod tidy
+go build ./...
 ```
 
 ---
 
 ## Quick Start
 
-**1. Start the teamserver:**
+**1. Start the teamserver**
+
 ```bash
 go run ./cmd/teamserver
 ```
 
-**2. Start a listener:**
+**2. Start a TLS listener**
+
 ```
 nullbeacon> listen --lhost 0.0.0.0 --lport 8443
 ```
 
-**3. Generate an agent:**
+**3. Generate an agent**
+
 ```
 nullbeacon> generate --os linux --arch amd64 --lhost <your_ip> --lport 8443
 ```
 
-**4. Deploy the generated binary on the target machine and execute it.**
+**4. Deploy and execute the agent on the target machine**
 
-**5. Interact with the connected agent:**
+**5. Interact with the connected agent**
+
 ```
 nullbeacon> list
 nullbeacon> interact <agentID>
 [agent:3f9a1b2c]> whoami
+output: victim
 ```
 
-Monitor logs in a separate terminal:
-```bash
-tail -f teamserver.log
-```
+> Logs are written to `teamserver.log`. Monitor with `tail -f teamserver.log`.
 
 ---
 
-## Operator Shell Reference
+## Operator Reference
 
-### Listener Commands
+### Listeners
 
 | Command | Description |
 |---|---|
@@ -133,28 +175,28 @@ tail -f teamserver.log
 | `listeners` | List all active listeners |
 | `stop <listenerID>` | Stop a listener |
 
-### Agent Commands
+### Agents
 
 | Command | Description |
 |---|---|
 | `list` | List connected agents with last seen timestamp |
-| `interact <agentID>` | Enter agent shell |
-| `remove <agentID>` | Remove a dead agent |
-| `generate --os <os> --arch <arch> --lhost <ip> --lport <port>` | Generate an agent binary |
+| `interact <agentID>` | Enter the agent shell |
+| `remove <agentID>` | Remove a dead agent from the registry |
+| `generate --os <os> --arch <arch> --lhost <ip> --lport <port>` | Cross-compile and generate an agent binary |
 
-### Agent Shell Commands
+### Agent Shell
 
 | Command | Description |
 |---|---|
-| `<command>` | Queue a shell task and wait for output |
-| `tasks` | List all tasks and output |
-| `back` | Return to main shell |
+| `<command>` | Queue a shell command and wait for output |
+| `tasks` | List all queued and completed tasks |
+| `back` | Return to the main shell |
 
 ### General
 
 | Command | Description |
 |---|---|
-| `help` | Show help menu |
+| `help` | Display the help menu |
 | `exit` | Exit NullBeacon |
 
 ---
@@ -195,42 +237,27 @@ nullbeacon> exit
 ## Roadmap
 
 ### Completed
-- [x] Stage 1 — TCP teamserver skeleton
-- [x] Stage 2 — Agent check-in with system info
-- [x] Stage 3 — Beacon loop
-- [x] Stage 4 — Agent registration with UUID and mutex-protected map
-- [x] Stage 5 — Operator shell
-- [x] Stage 6 — Persistent agent ID + task delivery on beacon
-- [x] Stage 7 — Command execution and output return
-- [x] Stage 7.5 — NullBeacon CLI (readline, colors, banner)
-- [x] Stage 7.6 — Dynamic listener management
-- [x] Stage 7.7 — Agent generation with cross-compilation
-- [x] Stage 7.8 — Teamserver refactor into focused files
-- [x] Stage 7.9 — Agent reliability (retry loop, no fatal crashes)
-- [x] Stage 7.10 — Operator UX (notifications, timestamps, remove)
-- [x] Stage 7.11 — Basic OPSEC (strip symbols, sleep jitter)
-- [x] Stage 7.12 — TLS-only transport
+- [x] Stage 1–7 — Core framework (teamserver, agent, beacon loop, task queue)
+- [x] Stage 7.5–7.8 — Operator CLI, dynamic listeners, agent generation
+- [x] Stage 7.9–7.12 — Reliability, UX, OPSEC hardening, TLS transport
 - [x] Stage 8 — Persistence (Linux cron, Windows registry)
+- [x] Stage 9 — Evasion (AMSI patch, ETW stub)
 
 ### In Progress
-- [ ] Stage 9 — Evasion (AMSI/ETW stubs, sleep obfuscation)
+- [ ] Stage 10 — Packing (AES payload encryption, custom loaders)
 
 ### Planned
-- [ ] Stage 10 — Packing (AES payload encryption, custom loaders)
 - [ ] Stage 11 — Transport hardening (HTTPS listener, malleable profiles)
-
-### Release v0.1.0
-- [ ] Stage R1 — Install script (`curl | bash`, installs to `/usr/local/bin`)
-- [ ] Stage R2 — GitHub Actions release workflow (auto-build on version tag)
-- [ ] Stage R3 — Uninstall command (`nullbeacon --uninstall`)
-- [ ] Stage R4 — GitHub Release with pre-compiled Linux binary
-
-### Stealth Roadmap
 - [ ] Stage 12 — Process injection
 - [ ] Stage 13 — Living off the Land (LOLBins)
 - [ ] Stage 14 — Malleable C2 profiles
 - [ ] Stage 15 — Syscall obfuscation
 - [ ] Stage 16 — In-memory execution
+
+### Release v0.1.0
+- [ ] Install script — one-liner install to `/usr/local/bin`
+- [ ] GitHub Actions release pipeline — auto-build on version tag
+- [ ] Pre-compiled Linux binary on GitHub Releases
 
 ---
 
@@ -248,4 +275,4 @@ GPL v3 — see [LICENSE](LICENSE) for details.
 
 ## Disclaimer
 
-NullBeacon is developed for **educational purposes**, **CTF competitions**, and **authorized security research** only. The authors assume no liability for misuse. Always obtain explicit written permission before testing against any system you do not own.
+NullBeacon is developed strictly for **educational purposes**, **CTF competitions**, and **authorized security research**. The authors assume no liability for misuse. Always obtain explicit written permission before testing against any system you do not own.
