@@ -10,7 +10,7 @@ RESET='\033[0m'
 
 BINARY_NAME="nullbeacon"
 INSTALL_DIR="/usr/local/bin"
-DOWNLOAD_URL="https://github.com/RodKast/NullBeacon/releases/latest/download/nullbeacon-linux-amd64"
+DOWNLOAD_URL="https://github.com/RodKast/NullBeacon/releases/latest/download/nullbeacon-linux-$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/')"
 
 echo -e "${BOLD}${CYAN}"
 echo "  _   _       _ _ ____"
@@ -28,11 +28,16 @@ if [ "$EUID" -ne 0 ]; then
     exit 1
 fi
 
-echo -e "${CYAN}[*] Downloading NullBeacon...${RESET}"
-curl -fsSL -o "/tmp/${BINARY_NAME}" "${DOWNLOAD_URL}"
+if [ -f "./${BINARY_NAME}" ]; then
+    echo -e "${CYAN}[*] Local binary found — installing from source build...${RESET}"
+    mv "./${BINARY_NAME}" "${INSTALL_DIR}/${BINARY_NAME}"
+else
+    echo -e "${CYAN}[*] No local binary found — downloading from GitHub Releases...${RESET}"
+    echo -e "${CYAN}    URL: ${DOWNLOAD_URL}${RESET}"
+    curl -fsSL -o "/tmp/${BINARY_NAME}" "${DOWNLOAD_URL}"
+    mv "/tmp/${BINARY_NAME}" "${INSTALL_DIR}/${BINARY_NAME}"
+fi
 
-echo -e "${CYAN}[*] Installing to ${INSTALL_DIR}/${BINARY_NAME}...${RESET}"
-mv "/tmp/${BINARY_NAME}" "${INSTALL_DIR}/${BINARY_NAME}"
 chmod +x "${INSTALL_DIR}/${BINARY_NAME}"
 
 echo ""

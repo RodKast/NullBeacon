@@ -137,25 +137,70 @@ graph LR
 
 ## Installation
 
-**Option 1 — Install from release (Linux, requires root):**
+### Option 1 — Pre-compiled Binary (Recommended)
 
-1. Download the latest release from the [Releases page](https://github.com/RodKast/NullBeacon/releases/latest)
-2. Run the install script:
+> Requires Linux and root access.
+
+**1. Go to the [Releases page](https://github.com/RodKast/NullBeacon/releases/latest) and download the binary for your architecture:**
+- `nullbeacon-linux-amd64` — standard x86_64 machines
+- `nullbeacon-linux-arm64` — ARM machines (Kali on Apple Silicon, Raspberry Pi, etc.)
+
+**2. Install using the provided script (recommended):**
 ```bash
+# Download install.sh from the repo root, then:
 sudo bash install.sh
 ```
-3. Start the teamserver:
+
+**Or install manually:**
+```bash
+# Replace with your downloaded filename if using amd64
+sudo mv nullbeacon-linux-arm64 /usr/local/bin/nullbeacon
+sudo chmod +x /usr/local/bin/nullbeacon
+```
+
+**3. Start the teamserver:**
 ```bash
 nullbeacon
 ```
 
-**Option 2 — Build from source (requires Go 1.21+):**
+**To uninstall:**
+```bash
+nullbeacon --uninstall
+```
+
+---
+
+### Option 2 — Build from Source
+
+> Requires Go 1.21+
+
+**1. Clone the repo:**
 ```bash
 git clone https://github.com/RodKast/NullBeacon.git
 cd NullBeacon
+```
+
+**2. Build the teamserver binary:**
+```bash
 go mod tidy
-go build ./...
-go run ./cmd/teamserver
+go build -o nullbeacon ./cmd/teamserver
+```
+
+**3. Run the install script to install it system-wide:**
+```bash
+sudo bash install.sh
+```
+
+> `install.sh` moves the binary to `/usr/local/bin/nullbeacon` and makes it executable — after this you can type `nullbeacon` from anywhere.
+
+**4. Start the teamserver:**
+```bash
+nullbeacon
+```
+
+**To uninstall:**
+```bash
+nullbeacon --uninstall
 ```
 
 ---
