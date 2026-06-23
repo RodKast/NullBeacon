@@ -13,8 +13,8 @@ func printHelp() {
 
 	fmt.Println()
 	cyan.Println("  LISTENERS")
-	white.Printf("  %-50s", "listen tcp --lhost <host> --lport <port>")
-	green.Println("Start a TCP listener")
+	white.Printf("  %-50s", "listen --lhost <host> --lport <port>")
+	green.Println("Start a TLS listener")
 	white.Printf("  %-50s", "listeners")
 	green.Println("List active listeners")
 	white.Printf("  %-50s", "stop <listenerID>")

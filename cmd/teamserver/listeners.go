@@ -12,12 +12,11 @@ import (
 
 func startNewListener(command string) {
 	parts := strings.Fields(command)
-	if len(parts) < 6 {
-		fmt.Println("Usage: listen tcp --lhost 0.0.0.0 --lport 8080")
+	if len(parts) < 5 {
+		fmt.Println("Usage: listen --lhost 0.0.0.0 --lport 8443")
 		return
 	}
 
-	protocol := parts[1]
 	var host string
 	var port int
 
@@ -30,7 +29,7 @@ func startNewListener(command string) {
 		}
 	}
 
-	l := listener.NewListener(protocol, host, port)
+	l := listener.NewListener("tls", host, port)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	l.Cancel = cancel
@@ -39,24 +38,19 @@ func startNewListener(command string) {
 	listeners[l.ID] = l
 	listenerMu.Unlock()
 
-go func() {
-	var err error 
-    if protocol == "tls" {
-        tlsConfig, err := generateTLSConfig()
-        if err != nil {
-            log.Printf("failed to generate TLS config: %v", err)
-            return
-        }
-        err = l.StartTLS(ctx, handleConnection, tlsConfig)
-    } else {
-        err = l.Start(ctx, handleConnection)
-    }
-    if err != nil {
-        log.Printf("listener %s stopped with error: %v", l.ID, err)
-    } else {
-        log.Printf("listener %s stopped", l.ID)
-    }
-}()
+	go func() {
+		tlsConfig, err := generateTLSConfig()
+		if err != nil {
+			log.Printf("failed to generate TLS config: %v", err)
+			return
+		}
+		err = l.StartTLS(ctx, handleConnection, tlsConfig)
+		if err != nil {
+			log.Printf("listener %s stopped with error: %v", l.ID, err)
+		} else {
+			log.Printf("listener %s stopped", l.ID)
+		}
+	}()
 
 	l.Status = "running"
 	log.Printf("started listener %s on %s:%d", l.ID, l.Host, l.Port)
