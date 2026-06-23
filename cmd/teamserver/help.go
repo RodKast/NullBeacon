@@ -13,8 +13,8 @@ func printHelp() {
 
 	fmt.Println()
 	cyan.Println("  LISTENERS")
-	white.Printf("  %-50s", "listen --lhost <host> --lport <port>")
-	green.Println("Start a TLS listener")
+	white.Printf("  %-50s", "listen --lhost <host> --lport <port> --protocol tls|https")
+	green.Println("Start a TLS or HTTPS listener")
 	white.Printf("  %-50s", "listeners")
 	green.Println("List active listeners")
 	white.Printf("  %-50s", "stop <listenerID>")
@@ -26,6 +26,8 @@ func printHelp() {
 	green.Println("List connected agents")
 	white.Printf("  %-50s", "interact <agentID>")
 	green.Println("Enter agent shell")
+	white.Printf("  %-50s", "remove <agentID>")
+	green.Println("Remove a dead agent")
 	white.Printf("  %-50s", "generate --os <os> --arch <arch> --lhost <host> --lport <port>")
 	green.Println("Generate an agent binary")
 
