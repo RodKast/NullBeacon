@@ -1,6 +1,8 @@
 package main
 
 import (
+	crand "crypto/rand"
+	"encoding/hex"
 	"fmt"
 	"math/rand"
 	"os"
@@ -50,8 +52,14 @@ func generateAgent(command string) {
 	}
 
 	serverAddr := fmt.Sprintf("%s:%s", lhost, lport)
-	ldflags := fmt.Sprintf("-s -w -X main.AgentID=%s -X main.ServerAddr=%s", agentID, serverAddr)
-
+	keyBytes := make([]byte, 32)
+	_, err := crand.Read(keyBytes)
+	if err != nil {
+		fmt.Printf("[-] failed to generate AES key: %s\n", err)
+		return
+	}
+	aesKey := hex.EncodeToString(keyBytes)
+	ldflags := fmt.Sprintf("-s -w -X main.AgentID=%s -X main.ServerAddr=%s -X main.AESKey=%s", agentID, serverAddr, aesKey)
 	cmd := exec.Command("go", "build", "-ldflags", ldflags, "-o", outputFile, "./cmd/agent")
 	cmd.Env = append(os.Environ(), "GOOS="+goos, "GOARCH="+goarch)
 
