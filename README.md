@@ -38,32 +38,38 @@ The framework is designed around the principle of **separation of concerns** —
 
 ## Architecture
 
-```
-Operator Terminal
-       │
-       ▼
- ┌─────────────────────────────┐
- │      NullBeacon Teamserver  │
- │                             │
- │  ┌─────────────────────┐   │
- │  │   Listener Manager  │   │
- │  │  TLS  :port ◄───────┼───┼──── Agent beacon (encrypted)
- │  │  HTTPS :443 (soon)  │   │
- │  └─────────────────────┘   │
- │                             │
- │  Agent Registry             │
- │  Task Queue                 │
- │  teamserver.log             │
- └─────────────────────────────┘
-```
+```mermaid
+flowchart TD
+    OP(["👤 Operator"]):::operator
 
-| Component | Description |
-|---|---|
-| `teamserver` | Core server — manages listeners, agents, and tasks |
-| `listener` | Pluggable TLS listener (HTTPS upcoming) |
-| `agent` | Implant — beacons home, executes tasks, returns output |
-| `generate.go` | Cross-compiles agents for Linux and Windows |
-| `tls.go` | Generates self-signed TLS certificates at runtime |
+    subgraph TS["NullBeacon Teamserver"]
+        SH["Operator Shell\n────────────────\nreadline · colors · notifications"]
+        LM["Listener Manager\n────────────────\nTLS · HTTPS"]
+        AR["Agent Registry\n────────────────\nUUID · hostname · last seen"]
+        TQ["Task Queue\n────────────────\nper-agent · delivered on beacon"]
+        LOG["teamserver.log"]
+    end
+
+    subgraph AGENTS["Target Machines"]
+        A1["Agent\nLinux amd64"]
+        A2["Agent\nLinux arm64"]
+        A3["Agent\nWindows x64"]
+    end
+
+    OP -->|"commands"| SH
+    SH --> LM
+    SH --> AR
+    SH --> TQ
+    LM -->|"TLS / HTTPS beacon"| A1
+    LM -->|"TLS / HTTPS beacon"| A2
+    LM -->|"TLS / HTTPS beacon"| A3
+    A1 -->|"encrypted output"| TQ
+    A2 -->|"encrypted output"| TQ
+    A3 -->|"encrypted output"| TQ
+    TQ --> LOG
+
+    classDef operator fill:#6366f1,color:#fff,stroke:none
+```
 
 ---
 
@@ -86,34 +92,45 @@ Operator Terminal
 
 ## Project Structure
 
-```
-NullBeacon/
-├── cmd/
-│   ├── teamserver/
-│   │   ├── main.go             # Entry point, banner, operator shell
-│   │   ├── handlers.go         # Agent connection and task delivery
-│   │   ├── listeners.go        # Listener start/stop/list
-│   │   ├── agents.go           # Agent list, interact shell, remove
-│   │   ├── generate.go         # Agent binary generation
-│   │   ├── tls.go              # TLS certificate generation
-│   │   └── help.go             # Help menu
-│   └── agent/
-│       ├── main.go             # Beacon loop, task execution
-│       ├── persist_linux.go    # Linux persistence (cron)
-│       ├── persist_windows.go  # Windows persistence (registry)
-│       ├── persist_other.go    # Stub for other platforms
-│       ├── evasion_windows.go  # AMSI + ETW patching
-│       └── evasion_other.go    # Stub for other platforms
-├── pkg/
-│   ├── agent/                  # Agent struct and registration
-│   ├── listener/               # Listener struct with StartTLS
-│   └── task/                   # Task struct and status tracking
-├── .github/
-│   └── workflows/
-│       └── go.yml              # CI — build and test on push
-├── go.mod
-├── go.sum
-└── teamserver.log              # Runtime log (gitignored)
+```mermaid
+graph LR
+    subgraph CMD["cmd/"]
+        subgraph TS2["teamserver/"]
+            M["main.go\nentry point · shell"]
+            H["handlers.go\nconnection · tasks"]
+            L["listeners.go\nstart · stop · list"]
+            AG["agents.go\nlist · interact · remove"]
+            GEN["generate.go\ncross-compile agents"]
+            TLS["tls.go\ncert generation"]
+            HLP["help.go\nhelp menu"]
+            UN["uninstall.go\nuninstall"]
+        end
+        subgraph AGT["agent/"]
+            AM["main.go\nbeacon loop"]
+            PL["persist_linux.go\ncron @reboot"]
+            PW["persist_windows.go\nregistry Run key"]
+            EW["evasion_windows.go\nAMSI · ETW patch"]
+            PK["pack.go\nAES-256 · XOR"]
+        end
+    end
+
+    subgraph PKG["pkg/"]
+        PA["agent/\nAgent struct"]
+        PLS["listener/\nListener struct"]
+        PT["task/\nTask struct"]
+    end
+
+    M --> H
+    M --> L
+    M --> AG
+    M --> GEN
+    L --> TLS
+    H --> PA
+    GEN --> PA
+    AM --> PL
+    AM --> PW
+    AM --> EW
+    AM --> PK
 ```
 
 ---
