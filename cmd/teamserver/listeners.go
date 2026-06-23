@@ -13,23 +13,32 @@ import (
 func startNewListener(command string) {
 	parts := strings.Fields(command)
 	if len(parts) < 5 {
-		fmt.Println("Usage: listen --lhost 0.0.0.0 --lport 8443")
+		fmt.Println("Usage: listen --lhost 0.0.0.0 --lport 8443 [--protocol https|tls]")
 		return
 	}
 
 	var host string
 	var port int
+	proto := "tls"
 
 	for i, p := range parts {
-		if p == "--lhost" {
-			host = parts[i+1]
-		}
-		if p == "--lport" {
-			port, _ = strconv.Atoi(parts[i+1])
+		switch p {
+		case "--lhost":
+			if i+1 < len(parts) {
+				host = parts[i+1]
+			}
+		case "--lport":
+			if i+1 < len(parts) {
+				port, _ = strconv.Atoi(parts[i+1])
+			}
+		case "--protocol":
+			if i+1 < len(parts) {
+				proto = parts[i+1]
+			}
 		}
 	}
 
-	l := listener.NewListener("tls", host, port)
+	l := listener.NewListener(proto, host, port)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	l.Cancel = cancel
@@ -38,24 +47,32 @@ func startNewListener(command string) {
 	listeners[l.ID] = l
 	listenerMu.Unlock()
 
-	go func() {
-		tlsConfig, err := generateTLSConfig()
-		if err != nil {
-			log.Printf("failed to generate TLS config: %v", err)
-			return
-		}
-		err = l.StartTLS(ctx, handleConnection, tlsConfig)
-		if err != nil {
-			log.Printf("listener %s stopped with error: %v", l.ID, err)
-		} else {
-			log.Printf("listener %s stopped", l.ID)
-		}
-	}()
+	if proto == "https" {
+		go func() {
+			err := startHTTPSListener(host, port)
+			if err != nil {
+				log.Printf("https listener stopped: %v", err)
+			}
+		}()
+	} else {
+		go func() {
+			tlsConfig, err := generateTLSConfig()
+			if err != nil {
+				log.Printf("failed to generate TLS config: %v", err)
+				return
+			}
+			err = l.StartTLS(ctx, handleConnection, tlsConfig)
+			if err != nil {
+				log.Printf("listener %s stopped with error: %v", l.ID, err)
+			} else {
+				log.Printf("listener %s stopped", l.ID)
+			}
+		}()
+	}
 
 	l.Status = "running"
 	log.Printf("started listener %s on %s:%d", l.ID, l.Host, l.Port)
 	fmt.Printf("started listener %s on %s:%d\n", l.ID, l.Host, l.Port)
-
 }
 
 func stopListener(command string) {
@@ -96,4 +113,3 @@ func listListeners() {
 		fmt.Printf("ID: %s, Protocol: %s, Host: %s, Port: %d, Status: %s\n", id, l.Protocol, l.Host, l.Port, l.Status)
 	}
 }
-
