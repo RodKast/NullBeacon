@@ -72,7 +72,7 @@ Operator Terminal
 | Category | Details |
 |---|---|
 | **Transport** | TLS-only — all C2 traffic encrypted by default |
-| **Listeners** | Dynamic start/stop/list, context-based cancellation |
+| **Listeners** | TLS and HTTPS, dynamic start/stop/list, context-based cancellation |
 | **Agents** | UUID registration, returning beacon detection, last seen tracking |
 | **Tasks** | Per-agent queue, delivered on next beacon, output returned automatically |
 | **Generation** | Cross-compile for Linux/Windows, random codename filenames, debug symbols stripped |
@@ -172,7 +172,7 @@ output: victim
 
 | Command | Description |
 |---|---|
-| `listen --lhost <host> --lport <port>` | Start a TLS listener |
+| `listen --lhost <host> --lport <port> --protocol tls\|https` | Start a TLS or HTTPS listener |
 | `listeners` | List all active listeners |
 | `stop <listenerID>` | Stop a listener |
 
@@ -244,9 +244,7 @@ nullbeacon> exit
 - [x] Stage 8 — Persistence (Linux cron, Windows registry)
 - [x] Stage 9 — Evasion (AMSI patch, ETW stub)
 - [x] Stage 10 — Packing (AES-256 + XOR encryption, per-agent key injection)
-
-### In Progress
-- [ ] Stage 11 — Transport hardening (HTTPS listener, malleable profiles)
+- [x] Stage 11 — Transport hardening (HTTPS listener, `/beacon` and `/result` routes)
 
 ### Planned
 - [ ] Stage 11 — Transport hardening (HTTPS listener, malleable profiles)
