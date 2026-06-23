@@ -78,6 +78,7 @@ Operator Terminal
 | **Generation** | Cross-compile for Linux/Windows, random codename filenames, debug symbols stripped |
 | **Persistence** | Linux cron `@reboot` · Windows registry `Run` key |
 | **Evasion** | AMSI patch · ETW stub (Windows) |
+| **Packing** | AES-256-GCM + XOR encryption · per-agent key injected at build time |
 | **OPSEC** | Sleep jitter (8–12s) · stripped symbols · TLS encryption |
 | **Operator UX** | readline shell · colored output · agent notifications · help menu |
 
@@ -242,9 +243,10 @@ nullbeacon> exit
 - [x] Stage 7.9–7.12 — Reliability, UX, OPSEC hardening, TLS transport
 - [x] Stage 8 — Persistence (Linux cron, Windows registry)
 - [x] Stage 9 — Evasion (AMSI patch, ETW stub)
+- [x] Stage 10 — Packing (AES-256 + XOR encryption, per-agent key injection)
 
 ### In Progress
-- [ ] Stage 10 — Packing (AES payload encryption, custom loaders)
+- [ ] Stage 11 — Transport hardening (HTTPS listener, malleable profiles)
 
 ### Planned
 - [ ] Stage 11 — Transport hardening (HTTPS listener, malleable profiles)
