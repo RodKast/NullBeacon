@@ -4,7 +4,8 @@
 [![Go Version](https://img.shields.io/badge/Go-1.21+-00ADD8?style=flat&logo=go&logoColor=white)](https://golang.org)
 [![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20Windows-lightgrey?style=flat)](https://github.com/RodKast/NullBeacon)
 [![License](https://img.shields.io/badge/license-GPL%20v3-blue?style=flat)](LICENSE)
-[![Status](https://img.shields.io/badge/status-active%20development-orange?style=flat)](https://github.com/RodKast/NullBeacon)
+[![Status](https://img.shields.io/badge/status-active%20development-orange?style=flat)
+[![Release](https://img.shields.io/github/v/release/RodKast/NullBeacon?style=flat&color=green)](https://github.com/RodKast/NullBeacon/releases/latest)](https://github.com/RodKast/NullBeacon)
 
 > **NullBeacon** is a modular, beacon-based Command & Control framework written in Go — built for authorized security research, CTF competitions, and home lab red team operations.
 
@@ -120,8 +121,12 @@ NullBeacon/
 
 ## Installation
 
-**Requirements:** Go 1.21+
+**Option 1 — One-liner install (Linux, requires root):**
+```bash
+curl -fsSL https://raw.githubusercontent.com/RodKast/NullBeacon/main/install.sh | sudo bash
+```
 
+**Option 2 — Build from source (requires Go 1.21+):**
 ```bash
 git clone https://github.com/RodKast/NullBeacon.git
 cd NullBeacon
@@ -254,10 +259,10 @@ nullbeacon> exit
 - [ ] Stage 15 — Syscall obfuscation
 - [ ] Stage 16 — In-memory execution
 
-### Release v0.1.0
-- [ ] Install script — one-liner install to `/usr/local/bin`
-- [ ] GitHub Actions release pipeline — auto-build on version tag
-- [ ] Pre-compiled Linux binary on GitHub Releases
+### Release v0.1.1 ✓
+- [x] Install script — one-liner install to `/usr/local/bin`
+- [x] GitHub Actions release pipeline — auto-build on version tag
+- [x] Pre-compiled Linux binary on GitHub Releases
 
 ---
 
