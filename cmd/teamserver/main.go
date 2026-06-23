@@ -36,6 +36,10 @@ func printBanner() {
 
 func main() {
 	printBanner()
+	if len(os.Args) > 1 && os.Args[1] == "--uninstall" {
+		uninstall()
+		return
+	}
 	logFile, err := os.OpenFile("teamserver.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
 	if err != nil {
 		log.Fatalf("failed to open log file: %v", err)
