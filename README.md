@@ -86,6 +86,8 @@ flowchart TD
 | **Evasion** | AMSI patch · ETW stub (Windows) |
 | **Packing** | AES-256-GCM + XOR encryption · per-agent key injected at build time |
 | **Injection** | Process injection via VirtualAllocEx · WriteProcessMemory · CreateRemoteThread (Windows) |
+| **LOLBins** | PowerShell encoded commands · certutil file download (Windows) |
+| **Profiles** | Malleable beacon URL · User-Agent · interval via `profile.json` |
 | **OPSEC** | Sleep jitter (8–12s) · stripped symbols · TLS encryption |
 | **Operator UX** | readline shell · colored output · agent notifications · help menu |
 
@@ -321,10 +323,10 @@ nullbeacon> exit
 - [x] Stage 10 — Packing (AES-256 + XOR encryption, per-agent key injection)
 - [x] Stage 11 — Transport hardening (HTTPS listener, `/beacon` and `/result` routes)
 - [x] Stage 12 — Process injection (VirtualAllocEx, WriteProcessMemory, CreateRemoteThread)
+- [x] Stage 13 — Living off the Land (LOLBins — PowerShell encoded commands, certutil download)
+- [x] Stage 14 — Malleable C2 profiles (configurable beacon URL, User-Agent, interval)
 
 ### Planned
-- [ ] Stage 13 — Living off the Land (LOLBins)
-- [ ] Stage 14 — Malleable C2 profiles
 - [ ] Stage 15 — Syscall obfuscation
 - [ ] Stage 16 — In-memory execution
 
