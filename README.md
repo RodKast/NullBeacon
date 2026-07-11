@@ -85,6 +85,7 @@ flowchart TD
 | **Persistence** | Linux cron `@reboot` · Windows registry `Run` key |
 | **Evasion** | AMSI patch · ETW stub (Windows) |
 | **Packing** | AES-256-GCM + XOR encryption · per-agent key injected at build time |
+| **Injection** | Process injection via VirtualAllocEx · WriteProcessMemory · CreateRemoteThread (Windows) |
 | **OPSEC** | Sleep jitter (8–12s) · stripped symbols · TLS encryption |
 | **Operator UX** | readline shell · colored output · agent notifications · help menu |
 
@@ -319,19 +320,17 @@ nullbeacon> exit
 - [x] Stage 9 — Evasion (AMSI patch, ETW stub)
 - [x] Stage 10 — Packing (AES-256 + XOR encryption, per-agent key injection)
 - [x] Stage 11 — Transport hardening (HTTPS listener, `/beacon` and `/result` routes)
+- [x] Stage 12 — Process injection (VirtualAllocEx, WriteProcessMemory, CreateRemoteThread)
 
 ### Planned
-- [ ] Stage 11 — Transport hardening (HTTPS listener, malleable profiles)
-- [ ] Stage 12 — Process injection
 - [ ] Stage 13 — Living off the Land (LOLBins)
 - [ ] Stage 14 — Malleable C2 profiles
 - [ ] Stage 15 — Syscall obfuscation
 - [ ] Stage 16 — In-memory execution
 
-### Release v0.1.1 ✓
-- [x] Install script — one-liner install to `/usr/local/bin`
-- [x] GitHub Actions release pipeline — auto-build on version tag
-- [x] Pre-compiled Linux binary on GitHub Releases
+### Released ✓
+- [x] v0.1.2 — Linux amd64 + arm64 binaries, install script, uninstall command
+- [x] CI/CD — lint, vulnerability scan, cross-platform build checks on every push
 
 ---
 
