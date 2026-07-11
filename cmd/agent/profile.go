@@ -22,5 +22,7 @@ func init() {
 	if err != nil {
 		return
 	}
-	json.Unmarshal(data, &activeProfile)
+	if err := json.Unmarshal(data, &activeProfile); err != nil {
+		return
+	}
 }
