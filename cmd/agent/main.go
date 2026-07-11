@@ -82,7 +82,9 @@ func main() {
 			}
 			log.Printf("command output: %s", output)
 			flat := strings.ReplaceAll(string(output), "\n", " ")
-			conn.Write([]byte(flat + "\n"))
+			if _, err = conn.Write([]byte(flat + "\n")); err != nil {
+					log.Printf("failed to send output: %v", err)
+				}
 
 		}
 		conn.Close()

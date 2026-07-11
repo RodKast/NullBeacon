@@ -15,7 +15,10 @@ func handleConnection(conn net.Conn) {
 	defer conn.Close()
 	log.Printf("new connection from %s", conn.RemoteAddr())
 
-	conn.SetReadDeadline(time.Now().Add(5 * time.Second))
+	if err := conn.SetReadDeadline(time.Now().Add(5 * time.Second)); err != nil {
+		log.Printf("failed to set read deadline: %v", err)
+		return
+	}
 
 	reader := bufio.NewReader(conn)
 	message, err := reader.ReadString('\n')
@@ -57,7 +60,10 @@ func handleConnection(conn net.Conn) {
 			}
 			a.Tasks[i].Status = "sent"
 
-			conn.SetReadDeadline(time.Now().Add(10 * time.Second))
+			if err := conn.SetReadDeadline(time.Now().Add(10 * time.Second)); err != nil {
+				log.Printf("failed to set read deadline: %v", err)
+				return
+			}
 			output, err := reader.ReadString('\n')
 			if err != nil {
 				log.Printf("failed to read task output: %v", err)

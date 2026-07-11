@@ -42,8 +42,8 @@ func generateAgent(command string) {
 	adjectives := []string{"DEAD", "SILENT", "BLIND", "HOLLOW", "GHOST", "DARK", "BROKEN", "VOID", "SHADOW", "CURSED"}
 	nouns := []string{"COBRA", "PHANTOM", "WRAITH", "SPECTER", "RAVEN", "WOLF", "BYTE", "PULSE", "SIGNAL", "DAEMON"}
 
-	rand.Seed(time.Now().UnixNano())
-	name := fmt.Sprintf("%s_%s", adjectives[rand.Intn(len(adjectives))], nouns[rand.Intn(len(nouns))])
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+	name := fmt.Sprintf("%s_%s", adjectives[r.Intn(len(adjectives))], nouns[r.Intn(len(nouns))])
 
 	if goos == "windows" {
 		outputFile = fmt.Sprintf("%s/%s.exe", outputDir, name)

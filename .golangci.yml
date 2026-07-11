@@ -1,0 +1,17 @@
+linters:
+  enable:
+    - errcheck
+    - staticcheck
+    - unused
+
+issues:
+  exclude-rules:
+    - path: cmd/agent/pack.go
+      linters:
+        - unused
+    - path: cmd/agent/inject_windows.go
+      linters:
+        - unused
+    - path: cmd/agent/inject_other.go
+      linters:
+        - unused
