@@ -31,6 +31,9 @@ jobs:
       - name: Cross-compile agent (windows/amd64)
         run: GOOS=windows GOARCH=amd64 go build -v ./cmd/agent
 
+      - name: Vet
+        run: go vet ./...
+
       - name: Test
         run: go test -v ./...
 

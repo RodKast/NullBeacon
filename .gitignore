@@ -1,4 +1,26 @@
-/teamserver
-/agent
+# Binaries
+nullbeacon
+nullbeacon-linux-*
+nullbeacon-windows-*
 *.exe
-teamserver.log
+*.elf
+
+# Agent builds
+/agent
+
+# Logs
+*.log
+
+# Profile (may contain operator-specific config)
+profile.json
+
+# Go build cache
+/vendor/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
