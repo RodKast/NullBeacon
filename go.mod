@@ -7,6 +7,7 @@ require (
 	github.com/fatih/color v1.19.0
 	github.com/google/uuid v1.6.0
 	golang.org/x/sys v0.46.0
+	golang.org/x/text v0.40.0
 )
 
 require (
