@@ -1,0 +1,128 @@
+name: CI/CD
+
+on:
+  push:
+    branches:
+      - "**"
+    tags:
+      - "v*"
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  security-events: write
+
+jobs:
+  lint-and-test:
+    name: Lint and Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Install golangci-lint
+        run: go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+
+      - name: Run gofmt
+        run: gofmt -w ./cmd ./pkg
+
+      - name: Run gofmt check
+        run: git diff --exit-code
+
+      - name: Run go vet
+        run: go vet ./...
+
+      - name: Run golangci-lint
+        run: golangci-lint run ./...
+
+      - name: Run unit tests
+        run: go test -v -race ./...
+
+  build-matrix:
+    name: Build Matrix
+    needs: lint-and-test
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [linux, windows]
+        arch: [amd64, arm64]
+        exclude:
+          - os: windows
+            arch: arm64
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Build teamserver
+        env:
+          GOOS: ${{ matrix.os }}
+          GOARCH: ${{ matrix.arch }}
+        run: go build -trimpath -ldflags "-s -w" -o nullbeacon-${{ matrix.os }}-${{ matrix.arch }} ./cmd/teamserver
+
+      - name: Build agent
+        env:
+          GOOS: ${{ matrix.os }}
+          GOARCH: ${{ matrix.arch }}
+        run: go build -trimpath -ldflags "-s -w" -o nullbeacon-agent-${{ matrix.os }}-${{ matrix.arch }} ./cmd/agent
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: nullbeacon-${{ matrix.os }}-${{ matrix.arch }}
+          path: |
+            nullbeacon-${{ matrix.os }}-${{ matrix.arch }}
+            nullbeacon-agent-${{ matrix.os }}-${{ matrix.arch }}
+          if-no-files-found: error
+
+  security-scan:
+    name: Security Scan
+    needs: lint-and-test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Install govulncheck
+        run: go install golang.org/x/vuln/cmd/govulncheck@latest
+
+      - name: Run govulncheck
+        run: $(go env GOPATH)/bin/govulncheck ./...
+
+  release:
+    name: Release
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs:
+      - build-matrix
+      - security-scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/**/nullbeacon-*
+          generate_release_notes: true

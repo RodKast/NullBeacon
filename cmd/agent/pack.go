@@ -7,9 +7,11 @@ import (
 	"encoding/hex"
 	"fmt"
 	"io"
+	"os"
+	"strings"
 )
 
-var AESKey = "nullbeacon00000000000000000000000000000000000000000000000000000000"
+var AESKey = ""
 
 func encrypt(data []byte, key []byte) ([]byte, error) {
 	block, err := aes.NewCipher(key)
@@ -83,6 +85,16 @@ func unpackPayload(packedPayload []byte) ([]byte, error) {
 }
 
 func aesKey() []byte {
-	key, _ := hex.DecodeString(AESKey)
+	keyValue := strings.TrimSpace(AESKey)
+	if keyValue == "" {
+		keyValue = strings.TrimSpace(os.Getenv("NULLBEACON_AES_KEY"))
+	}
+	if keyValue == "" {
+		return make([]byte, 32)
+	}
+	key, err := hex.DecodeString(keyValue)
+	if err != nil || len(key) != 32 {
+		panic("NULLBEACON_AES_KEY must be a 64-character hex string")
+	}
 	return key
 }

