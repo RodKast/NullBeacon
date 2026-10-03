@@ -312,6 +312,20 @@ nullbeacon> exit
 
 ---
 
+## Security Hardening
+
+For lab and CTF use, the project now defaults to safer task validation and TLS minimums:
+
+- `NULLBEACON_INSECURE_TLS=true` is required to intentionally disable verification
+- `NULLBEACON_CA_CERT=/path/to/ca.pem` can be used to trust a lab CA instead of skipping verification
+- `NULLBEACON_CLIENT_CA=/path/to/client-ca.pem` enables optional client certificate validation on the server
+- `NULLBEACON_AES_KEY=<64-char-hex>` should be set before building or running the agent when using encrypted payloads
+- task payloads are expected to be namespaced as `task:exec:<command>` or `cmd:<command>`, reducing accidental raw-shell execution
+
+Use a private lab network, a short-lived self-signed CA, and explicit allowlists for commands when running against targets.
+
+---
+
 ## Roadmap
 
 ### Completed

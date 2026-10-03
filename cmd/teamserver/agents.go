@@ -25,7 +25,6 @@ func listAgents() {
 	}
 }
 
-
 func interactWithAgent(agentID string) {
 	agentMu.Lock()
 	a, exists := agents[agentID]
@@ -54,7 +53,7 @@ func interactWithAgent(agentID string) {
 				fmt.Printf("[%s] %s → %s: %s\n", t.ID[:8], t.Command, t.Status, t.Output)
 			}
 		default:
-			t := task.NewTask(agentID, command)
+			t := task.NewTask(agentID, "task:exec:"+command)
 			a.Tasks = append(a.Tasks, t)
 			fmt.Printf("[*] task queued: %s (waiting for output...)\n", t.ID)
 			for t.Output == "" {
@@ -83,4 +82,4 @@ func removeAgent(command string) {
 
 	delete(agents, agentID)
 	fmt.Printf("agent %s removed\n", agentID)
-}		
+}
